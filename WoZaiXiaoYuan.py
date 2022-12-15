@@ -41,7 +41,7 @@ def GetUnDo(headers, username):
     res = requests.get(url, headers=headers)
     lists = json.loads(res.text)['data']
     for list in lists['list']:
-        if list['state'] == 1 and list['state'] == 0:
+        if list['state'] == 1 and list['type'] == 0:
             return list['id']
     print(f"{username}未找到未打卡项目！")
     return False
