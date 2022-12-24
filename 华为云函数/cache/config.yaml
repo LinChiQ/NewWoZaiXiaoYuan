@@ -1,0 +1,23 @@
+mail_address: aaa@163.com # 邮箱地址
+password: aaa # 邮箱授权码
+host: smtp@163.com # 邮箱SMTP地址
+
+---
+
+username: 123456 # 我在校园用户名
+password: aaa # 我在校园密码
+receive: aaa@qq.com # 接受邮箱地址
+locations:
+  location: 贵州省贵阳市南明区遵义路街道遵义中路 # 打卡地址，省->区(市)->市->街道->路
+  longitude: 106.7040062 # 打卡经度
+  latitude: 26.5656204 # 打卡纬度
+
+--- # 多用户之间使用三短横线隔开
+
+username: 123456 # 我在校园用户名
+password: aaa # 我在校园密码
+receive: aaa@qq.com # 接受邮箱地址
+locations:
+  location: 贵州省贵阳市南明区遵义路街道遵义中路 # 打卡地址，省->区(市)->市->街道->路
+  longitude: 106.7040062 # 打卡经度
+  latitude: 26.5656204 # 打卡纬度
