@@ -80,5 +80,10 @@ filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
 
 2.华为云函数运行
 
+# python版本选择Python3.9
+
 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
-在这不再赘述。
+
+将config文件填写好后，将WoZaiXiaoYuan.py，index.py，cache文件夹统一打包为zip文件上传至函数云中
+
+将依赖文件按照文章中的方式添加至依赖包中，再在函数页面的最下面添加上依赖即可运行。
