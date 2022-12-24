@@ -189,12 +189,12 @@ def main():
         if jws:
             login_code = testLoginStatus(headers, jws)
         else:
-            return
+            continue
         if login_code is False:
             print(config['username'], "jws失效！")
             jws = Login(headers, config['username'], config['password'])
             if jws is False:
-                return False
+                continue
             print("jws文件更新成功")
             jws_data[config['username']] = jws
         headers = {
