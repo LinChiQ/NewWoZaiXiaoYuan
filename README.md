@@ -66,7 +66,19 @@ latitude填入打卡纬度
 
 
 # 代码使用
-所有配置填写完成后，将WoZaiXiaoYuan.py和cache文件夹一并上传到服务器或云函数之上，按照要求自定义打卡时间。
+
+1.服务器端配置：
+
+将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py以及cache文件夹上次到服务器中。
+
+filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
+
+配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python(3) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
+
+或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
+
+
+2.华为云函数运行
 
 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
 在这不再赘述。
