@@ -60,6 +60,14 @@ latitude填入打卡纬度
 # 多用户打卡
 多用户打卡在末尾新起一行，加上三个横线后(---)，在下一行复制粘贴上一用户配置格式，修改对应信息即可。
 
+
+坐标以及地点获取可用腾讯地图的坐标拾取器：https://lbs.qq.com/tool/getpoint/ ，但腾讯地图获取到的地址并不含有街道，请手动在路段前添加上街道。
+
+
+
+在获取街道时，可按F12打开开发者工具，点击网络后刷新，输入你所需地址后找到?key=XXXXX 的数据包，依次点开result，address_reference，town中的值便是街道名称。
+
+
 配置文件如下图：
 
 ![avatar](https://img-blog.csdnimg.cn/3900ac81640b45fbb0afe0f04796d5aa.png)
