@@ -73,7 +73,7 @@ latitude填入打卡纬度
 
 filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
 
-配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python(3) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
+配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python/python3(Ubuntu系统) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
 
 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
