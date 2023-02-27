@@ -95,7 +95,8 @@ filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
 
 2.华为云函数运行
 
-# python版本选择>=Python3.7
+
+python版本选择>=Python3.7
 
 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
 
