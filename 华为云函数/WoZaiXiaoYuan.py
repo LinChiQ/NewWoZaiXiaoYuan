@@ -57,7 +57,7 @@ def GetAnswers(headers, username, batch):
     locationType = data['data']['locationType']
     options = data['data']['options']
     fields = data['data']['fields']
-    for field in fields[1:]:
+    for field in fields:
         optionId = field['optionId']
         if optionId in options and field['field'] == f't{start}' and field['required'] is True:
             for i in options[optionId]:
