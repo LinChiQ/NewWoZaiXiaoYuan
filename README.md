@@ -93,11 +93,13 @@ latitude填入打卡纬度
 
 1.服务器端配置：
 
-将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py以及cache文件夹上次到服务器中。
+将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py，GoOut.py以及cache文件夹上传到服务器中。
 
 filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
 
 配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python/python3(Ubuntu系统) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
+
+python/python3(Ubuntu系统) GoOut.py所在路径/GoOut.py，几点运行便会几点自动提交外出报备
 
 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
@@ -109,6 +111,8 @@ python版本选择>=Python3.7
 
 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
 
-将config文件填写好后，将WoZaiXiaoYuan.py，index.py，cache文件夹统一打包为zip文件上传至函数云中
+将config文件填写好后，将WoZaiXiaoYuan.py，index.py，GoOut.py，cache文件夹统一打包为zip文件上传至函数云中
+
+华为云函数中自动判断当前时间，若为晚上8点之前运行，则执行外出报备，8点后执行为运行打卡，具体时间可修改index.py中的时间
 
 将依赖文件按照文章中的方式添加至依赖包中，再在函数页面的最下面添加上依赖即可运行。
