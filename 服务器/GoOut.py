@@ -39,7 +39,7 @@ def testLoginStatus(headers, jws):
 
 def GetJWData():
     try:
-        with open('/root/cache/jws.txt', 'r' , encoding='utf-8') as f:
+        with open('./cache/jws.txt', 'r' , encoding='utf-8') as f:
             jws_data = json.loads(f.read())
             print("读取现存jws文件成功！")
             return jws_data
@@ -52,7 +52,7 @@ def GetJWData():
 
 
 def GetConfigs():
-    with open('/root/cache/config.yaml', 'r', encoding='utf-8') as f:
+    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
@@ -179,5 +179,5 @@ if __name__ == '__main__':
     mail = ReturnMail(mails)
     jws_data = GetJWData()
     main()
-    with open('/root/cache/jws.txt', 'w' , encoding='utf-8') as f:
+    with open('./cache/jws.txt', 'w' , encoding='utf-8') as f:
         f.write(str(jws_data).replace("'", '"'))
