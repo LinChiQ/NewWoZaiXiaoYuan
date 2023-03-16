@@ -93,10 +93,7 @@ def GetPhoneNumber():
     }
     req = requests.post(url , data= data, headers=headers)
     text = json.loads(req.text)
-    if text['status'] == 1:
-        number = text['data']['rows'][0]
-    else:
-        number = '15120079717'
+    number = text['data']['rows'][0]
     return number
 
 
