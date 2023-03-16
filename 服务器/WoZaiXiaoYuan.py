@@ -86,7 +86,7 @@ def GetLocation(config_locations, locationType, username):
             locations.append(location[:location.index(_) + 1])
             location = location[location.index(_) + 1:]
     locate = locations.copy()
-    with open('/root/cache/location.json', 'r', encoding='utf-8') as f:
+    with open('./cache/location.json', 'r', encoding='utf-8') as f:
         txt = json.loads(f.read())
     datas = []
     while len(locations) != 1:
@@ -140,14 +140,14 @@ def ReturnMail(mails):
 
 
 def GetConfigs():
-    with open('/root/cache/config.yaml', 'r', encoding='utf-8') as f:
+    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
 
 def GetUsers():
     try:
-        with open('/root/cache/users.txt', 'r' , encoding='utf-8') as f:
+        with open('./cache/users.txt', 'r' , encoding='utf-8') as f:
             users_data = json.loads(f.read().replace("'", '"'))
             print("读取现存users文件成功！")
             return users_data
@@ -171,7 +171,7 @@ def GetEachUser(username, headers, batch, config):
 
 def GetJWData():
     try:
-        with open('/root/cache/jws.txt', 'r' , encoding='utf-8') as f:
+        with open('./cache/jws.txt', 'r' , encoding='utf-8') as f:
             jws_data = json.loads(f.read())
             print("读取现存jws文件成功！")
             return jws_data
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     jws_data = GetJWData()
     users_data = GetUsers()
     main()
-    with open('/root/cache/jws.txt', 'w' , encoding='utf-8') as f:
+    with open('./cache/jws.txt', 'w' , encoding='utf-8') as f:
         f.write(str(jws_data).replace("'", '"'))
-    with open('/root/cache/users.txt', 'w' , encoding='utf-8') as f:
+    with open('./cache/users.txt', 'w' , encoding='utf-8') as f:
         f.write(str(users_data).replace("'", '"'))
