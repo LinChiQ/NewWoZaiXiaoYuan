@@ -3,32 +3,32 @@
 
 
 
-# 支持功能：
+## 支持功能：
 
-1.多用户打卡
+1. 多用户打卡
 
-2.获取JWS存储本地，避免多次登录可能问题
+2. 获取JWS存储本地，避免多次登录可能问题
 
-3.根据用户输入地址获取配置参数，不再需要抓包获取
+3. 根据用户输入地址获取配置参数，不再需要抓包获取
 
-4.自动获取打卡答案，无需手动填入
+4. 自动获取打卡答案，无需手动填入
 
-5.每日自动外出报备
+5. 每日自动外出报备
 
-6.每日自动返校
+6. 每日自动返校
 
 
-# 使用说明：
+### 使用说明：
 Python3.7版本及以上
 
-pip install requests
+- pip install requests
 
-pip install yagmail
+- pip install yagmail
 
+---
 
-
-# 配置文件的使用：
-# 邮箱配置：
+## 配置文件的使用：
+### 邮箱配置：
 请将配置文件夹cache与程序本体放在同一路径下。
 
 
@@ -49,7 +49,7 @@ pip install yagmail
 ![avatar](https://img-blog.csdnimg.cn/0fb29040b4b24a6a9e9da93ed4aa42a2.png)
 
 
-# 用户信息的填写：
+## 用户信息的填写：
 在username处填入我在校园登陆账号，一般为手机号；
 
 password处填入登录密码；
@@ -68,7 +68,7 @@ longitude填入打卡经度
 latitude填入打卡纬度
 
 
-# 多用户打卡
+## 多用户打卡
 多用户打卡在末尾新起一行，加上三个横线后(---)，在下一行复制粘贴上一用户配置格式，修改对应信息即可。
 
 
@@ -80,9 +80,8 @@ latitude填入打卡纬度
 
 
 
-# 注意：
-
-我在校园密码修改后，请点击清除缓存，等待页面跳转到未登录界面时，便可把修改后密码填入程序配置文件中，密码建议为字母加数字，否则程序登陆失败。在后续如需登录到我在校园，请与登陆后重新按上述步骤修改密码并填入程序配置文件。
+登陆问题：
+> 我在校园密码修改后，请点击清除缓存，等待页面跳转到未登录界面时，便可把修改后密码填入程序配置文件中，密码建议为字母加数字，否则程序登陆失败。在运行完程序并且程序将jws存入本地后，即可正常登录我在校园。
 
 
 
@@ -91,27 +90,27 @@ latitude填入打卡纬度
 ![avatar](https://img-blog.csdnimg.cn/bd053620e86a418d9d2be5b34a396bdc.png)
 
 
-# 代码使用
+## 代码使用
 
-1.服务器端配置：
+1. 服务器端配置：
 
-将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py，GoOut.py以及cache文件夹上传到服务器中。
+- 将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py，GoOut.py以及cache文件夹上传到服务器中。
 
-filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
+- filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
 
-配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python/python3(Ubuntu系统) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
+- 配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python/python3(Ubuntu系统) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
 
-python/python3(Ubuntu系统) GoOut.py所在路径/GoOut.py，几点运行便会几点自动提交外出报备
+- python/python3(Ubuntu系统) GoOut.py所在路径/GoOut.py，几点运行便会几点自动提交外出报备
 
-或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
+- 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
 
 2.华为云函数运行
 
 
-python版本选择>=Python3.7
+- python版本选择>=Python3.7
 
-具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
+> 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
 
 将config文件填写好后，将WoZaiXiaoYuan.py，index.py，GoOut.py，cache文件夹统一打包为zip文件上传至函数云中
 
