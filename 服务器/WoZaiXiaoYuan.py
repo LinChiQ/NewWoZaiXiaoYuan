@@ -50,35 +50,20 @@ def GetUnDo(headers, username):
 
 def GetAnswers(headers, username, batch):
     try:
-        return users_data[str(username)][1], 0
+        return users_data[str(username)]
     except Exception as e:
         print("未找到现存答案信息！", e)
-    start = 1
     answers = {}
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getForm?batch='+batch
     res = requests.get(url, headers=headers)
     data = json.loads(res.text)
-    # locationType = data['data']['locationType']
-    locationType = 0
-    options = data['data']['options']
-    fields = data['data']['fields']
-    for field in fields:
-        optionId = field['optionId']
-        if optionId in options and field['field'] == f't{start}' and field['required'] is True:
-            for i in options[optionId]:
-                if i['type'] == 0:
-                    answers[field['field']] = i['value']
-            start += 1
-    answers.update({"type": 0, "locationMode": 0})
+    locationType = data['data']['locationType']
+    answers.update({"type": 0, "locationMode": 0, "locationType": locationType})
     print(f"获取{username}的参数成功！")
-    return answers, locationType
+    return answers
 
 
-def GetLocation(config_locations, locationType, username):
-    try:
-        return users_data[str(username)][0]
-    except KeyError:
-        print(f"{username}未找到现存位置信息！")
+def GetLocation(config_locations):
     location = config_locations['location']
     locations = []
     for _ in location:
@@ -98,8 +83,7 @@ def GetLocation(config_locations, locationType, username):
                     txt = i['children']
                 except KeyError:
                     break
-    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['longitude']}/{config_locations['latitude']}",
-                "locationType": locationType
+    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['longitude']}/{config_locations['latitude']}"
                 }
     return location
 
@@ -117,11 +101,9 @@ def GetEachJws(config, headers):
         return jws
 
 
-def Punch(headers, batch, answers, location, receive, username):
+def Punch(headers, batch, answers, receive, username):
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+batch
-    data = answers.copy()
-    data.update(location)
-    res = requests.post(url, json=data, headers=headers)
+    res = requests.post(url, json=answers, headers=headers)
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
@@ -161,12 +143,13 @@ def GetUsers():
 
 def GetEachUser(username, headers, batch, config):
     try:
-        return users_data[username][0], users_data[username][1]
+        return users_data[username]
     except:
-        answers, locationType = GetAnswers(headers, username, batch)
-        location = GetLocation(config['locations'], locationType, username)
-        users_data[str(username)] = [location, answers]
-        return location, answers
+        answers= GetAnswers(headers, username, batch)
+        location = GetLocation(config['locations'])
+        answers.update(location)
+        users_data[str(username)] = answers
+        return answers
 
 
 def GetJWData():
@@ -286,8 +269,8 @@ def main():
         batch = GetUnDo(headers, username)
         if not batch:
             continue
-        location, answers = GetEachUser(username, headers, batch, config)
-        Punch(headers, batch, answers, location, config['receive'], username)
+        answers = GetEachUser(username, headers, batch, config)
+        Punch(headers, batch, answers, config['receive'], username)
 
 
 if __name__ == "__main__":
