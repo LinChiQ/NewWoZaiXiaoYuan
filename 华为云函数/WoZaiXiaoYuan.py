@@ -42,34 +42,24 @@ def GetUnDo(headers, username):
     res = requests.get(url, headers=headers)
     lists = json.loads(res.text)['data']
     for list in lists['list']:
-        if list['state'] == 1 and list['state'] == 0:
+        if list['state'] == 1 and list['type'] == 0:
             return list['id']
     print(f"{username}未找到未打卡项目！")
     return False
 
 
 def GetAnswers(headers, username, batch):
-    start = 1
     answers = {}
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getForm?batch='+batch
     res = requests.get(url, headers=headers)
     data = json.loads(res.text)
     locationType = data['data']['locationType']
-    options = data['data']['options']
-    fields = data['data']['fields']
-    for field in fields:
-        optionId = field['optionId']
-        if optionId in options and field['field'] == f't{start}' and field['required'] is True:
-            for i in options[optionId]:
-                if i['type'] == 0:
-                    answers[field['field']] = i['value']
-            start += 1
-    answers.update({"type": 0, "locationMode": 0})
+    answers.update({"type": 0, "locationMode": 0, "locationType": locationType})
     print(f"获取{username}的参数成功！")
-    return answers, locationType
+    return answers
 
 
-def GetLocation(config_locations, locationType):
+def GetLocation(config_locations):
     location = config_locations['location']
     locations = []
     for _ in location:
@@ -77,7 +67,7 @@ def GetLocation(config_locations, locationType):
             locations.append(location[:location.index(_) + 1])
             location = location[location.index(_) + 1:]
     locate = locations.copy()
-    with open('code/cache/location.json', 'r', encoding='utf-8') as f:
+    with open('./cache/location.json', 'r', encoding='utf-8') as f:
         txt = json.loads(f.read())
     datas = []
     while len(locations) != 1:
@@ -89,18 +79,15 @@ def GetLocation(config_locations, locationType):
                     txt = i['children']
                 except KeyError:
                     break
-    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['latitude']}/{config_locations['longitude']}",
-                "locationType": locationType
+    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['longitude']}/{config_locations['latitude']}"
                 }
     return location
 
 
 
-def Punch(headers, batch, answers, location, receive, username):
+def Punch(headers, batch, answers, receive, username):
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+batch
-    data = answers.copy()
-    data.update(location)
-    res = requests.post(url, json=data, headers=headers)
+    res = requests.post(url, json=answers, headers=headers)
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
@@ -118,16 +105,19 @@ def ReturnMail(mails):
     return mail
 
 
-def GetEachUser(username, headers, batch, config):
-    answers, locationType = GetAnswers(headers, username, batch)
-    location = GetLocation(config['locations'], locationType, username)
-    return location, answers
-
-
 def GetConfigs():
-    with open('code/cache/config.yaml', 'r', encoding='utf-8') as f:
+    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
+
+
+
+def GetEachUser(username, headers, batch, config):
+    answers= GetAnswers(headers, username, batch)
+    location = GetLocation(config['locations'])
+    answers.update(location)
+    users_data[str(username)] = answers
+    return answers
 
 
 def DelayBackTime(id , headers):
@@ -191,19 +181,14 @@ def BackToSchool(headers_one , jws):
             return False
 
 
+
+
 def main():
     for config in configs:
         username = config['username']
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
-        jws = Login(headers , username , config['password'])
-        if jws:
-            login_code = testLoginStatus(headers, jws)
-        else:
-            continue
-        if login_code:
-            print(f"{username}登陆有效！")
-        else:
-            print(f"{username}登陆无效！")
+        jws = Login(headers, config['username'], config['password'])
+        if jws is False:
             continue
         headers = {
             'Host': 'gw.wozaixiaoyuan.com',
@@ -229,13 +214,13 @@ def main():
         batch = GetUnDo(headers, username)
         if not batch:
             continue
-        location, answers = GetEachUser(username, headers, batch, config)
-        Punch(headers, batch, answers, location, config['receive'], username)
+        answers = GetEachUser(username, headers, batch, config)
+        Punch(headers, batch, answers, config['receive'], username)
 
 
-def Start():
-    global configs , mail
+if __name__ == "__main__":
     configs = GetConfigs()
     mails = next(configs)
     mail = ReturnMail(mails)
     main()
+  
