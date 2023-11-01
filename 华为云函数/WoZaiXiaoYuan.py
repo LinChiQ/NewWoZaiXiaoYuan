@@ -3,6 +3,7 @@ import json
 import yagmail
 import yaml
 import time
+import re
 
 
 def Login(headers, username, password):
@@ -15,18 +16,21 @@ def Login(headers, username, password):
     text = json.loads(login_req.text)
     if text['code'] == 0:
         print(f"{username}账号登陆成功！")
-        jws = login_req.headers['JWSESSION']
-        return jws
+        set_cookie = login_req.headers['Set-Cookie']
+        jws = re.search(r'JWSESSION=.*?;', str(set_cookie)).group(0)
+        wzxy = re.search(r'WZXYSESSION=.*?;', str(set_cookie)).group(0)
+        cookie = f'{jws} {wzxy}'
+        return cookie
     else:
         print(f"{username}登陆失败，请检查账号密码！")
         return False
 
 
-def testLoginStatus(headers, jws):
+def testLoginStatus(headers, cookie):
     # 用任意需要鉴权的接口即可，这里随便选了一个
     url = "https://student.wozaixiaoyuan.com/heat/getTodayHeatList.json"
     headers['Host'] = "student.wozaixiaoyuan.com"
-    headers['JWSESSION'] = jws
+    headers['Cookie'] = cookie
     res = requests.post(url, headers=headers)
     text = json.loads(res.text)
     if text['code'] == 0:
@@ -84,7 +88,6 @@ def GetLocation(config_locations):
     return location
 
 
-
 def Punch(headers, batch, answers, receive, username):
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+batch
     res = requests.post(url, json=answers, headers=headers)
@@ -116,7 +119,6 @@ def GetEachUser(username, headers, batch, config):
     answers= GetAnswers(headers, username, batch)
     location = GetLocation(config['locations'])
     answers.update(location)
-    users_data[str(username)] = answers
     return answers
 
 
@@ -133,7 +135,7 @@ def DelayBackTime(id , headers):
         return False
 
 
-def BackToSchool(headers_one , jws):
+def BackToSchool(headers_one , cookie):
     get_one_url = 'https://gw.wozaixiaoyuan.com/out/mobile/out/getOne'
     req = requests.get(get_one_url, headers=headers_one)
     get_one = json.loads(req.text)
@@ -156,7 +158,6 @@ def BackToSchool(headers_one , jws):
     headers_two = {
         'Host': 'gw.wozaixiaoyuan.com',
         'accept': 'application/json, text/plain, */*',
-        'jwsession': jws,
         'user-agent': 'Mozilla/5.0 (Linux; Android 8.1.0; OPPO R11st Build/OPM1.171019.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4425 MMWEBSDK/20230202 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.33.2320(0x28002137) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91',
         'content-type': 'application/json;charset=UTF-8',
         'x-requested-with': 'com.tencent.mm',
@@ -166,8 +167,7 @@ def BackToSchool(headers_one , jws):
         'referer': f'https://gw.wozaixiaoyuan.com/h5/mobile/out/index/out/back?id={id}',
         'accept-encoding': 'gzip, deflate',
         'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-        'cookie': f'JWSESSION={jws}',
-        'cookie': f'JWSESSION={jws}'
+        'cookie': cookie
     }
     if state == 2:
         back_url = 'https://gw.wozaixiaoyuan.com/out/mobile/out/back?id=' + id
@@ -181,20 +181,18 @@ def BackToSchool(headers_one , jws):
             return False
 
 
-
-
 def main():
     for config in configs:
         username = config['username']
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
-        jws = Login(headers, config['username'], config['password'])
-        if jws is False:
+        cookie = Login(headers, config['username'], config['password'])
+        if cookie is False:
             continue
         headers = {
             'Host': 'gw.wozaixiaoyuan.com',
             'Connection': 'keep-alive',
             'Accept': 'application/json, text/plain, */*',
-            'JWSESSION': jws,
+            'Cookie': cookie,
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91',
             'Content-Type': 'application/json;charset=UTF-8',
             'X-Requested-With': 'com.tencent.mm',
@@ -206,7 +204,7 @@ def main():
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
         }
         if config['back']:
-            if BackToSchool(headers , jws):
+            if BackToSchool(headers , cookie):
                 print(username , "返校成功！")
                 mail.send(config['receive'] , '返校成功！' , '返校成功！')
             else:
@@ -223,4 +221,3 @@ if __name__ == "__main__":
     mails = next(configs)
     mail = ReturnMail(mails)
     main()
-  

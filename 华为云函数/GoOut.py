@@ -3,6 +3,7 @@ import json
 import time
 import yaml
 import yagmail
+import re
 
 
 def Login(headers, username, password):
@@ -15,18 +16,21 @@ def Login(headers, username, password):
     text = json.loads(login_req.text)
     if text['code'] == 0:
         print(f"{username}账号登陆成功！")
-        jws = login_req.headers['JWSESSION']
-        return jws
+        set_cookie = login_req.headers['Set-Cookie']
+        jws = re.search(r'JWSESSION=.*?;', str(set_cookie)).group(0)
+        wzxy = re.search(r'WZXYSESSION=.*?;', str(set_cookie)).group(0)
+        cookie = f'{jws} {wzxy}'
+        return cookie
     else:
         print(f"{username}登陆失败，请检查账号密码！")
         return False
 
 
-def testLoginStatus(headers, jws):
+def testLoginStatus(headers, cookie):
     # 用任意需要鉴权的接口即可，这里随便选了一个
     url = "https://student.wozaixiaoyuan.com/heat/getTodayHeatList.json"
     headers['Host'] = "student.wozaixiaoyuan.com"
-    headers['JWSESSION'] = jws
+    headers['Cookie'] = cookie
     res = requests.post(url, headers=headers)
     text = json.loads(res.text)
     if text['code'] == 0:
@@ -108,18 +112,17 @@ def GoOut(headers , receive):
 
 def main():
     for config in configs:
-        username = config['username']
         receive = config['receive']
         isOut = config['out']
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
-        jws = Login(headers, config['username'], config['password'])
-        if not jws:
+        cookie = Login(headers, config['username'], config['password'])
+        if not cookie:
             continue
         headers = {
             'Host': 'gw.wozaixiaoyuan.com',
             'Connection': 'keep-alive',
             'Accept': 'application/json, text/plain, */*',
-            'JWSESSION': jws,
+            'Cookie': cookie,
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91',
             'Content-Type': 'application/json;charset=UTF-8',
             'X-Requested-With': 'com.tencent.mm',
