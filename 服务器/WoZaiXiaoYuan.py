@@ -4,6 +4,7 @@ import yagmail
 import yaml
 import time
 import re
+import os
 
 
 def Login(headers, username, password):
@@ -126,14 +127,19 @@ def ReturnMail(mails):
 
 
 def GetConfigs():
-    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
+    current_path = os.path.abspath(__file__)
+    config_path = os.path.join(os.path.dirname(current_path), 'cache', 'config.yaml')
+    with open(config_path, 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
 
+
 def GetUsers():
     try:
-        with open('./cache/users.txt', 'r' , encoding='utf-8') as f:
+        current_path = os.path.abspath(__file__)
+        users_path = os.path.join(os.path.dirname(current_path), 'cache', 'users.txt')
+        with open(users_path, 'r', encoding='utf-8') as f:
             users_data = json.loads(f.read().replace("'", '"'))
             print("读取现存users文件成功！")
             return users_data
@@ -158,7 +164,9 @@ def GetEachUser(username, headers, batch, config):
 
 def GetJWData():
     try:
-        with open('./cache/jws.txt', 'r' , encoding='utf-8') as f:
+        current_path = os.path.abspath(__file__)
+        jws_path = os.path.join(os.path.dirname(current_path), 'cache', 'jws.txt')
+        with open(jws_path, 'r', encoding='utf-8') as f:
             jws_data = json.loads(f.read())
             print("读取现存jws文件成功！")
             return jws_data
@@ -168,6 +176,7 @@ def GetJWData():
     except Exception as e:
         print("未知错误", e)
         exit(0)
+
 
 
 def DelayBackTime(id , headers):
@@ -282,7 +291,9 @@ if __name__ == "__main__":
     jws_data = GetJWData()
     users_data = GetUsers()
     main()
-    with open('./cache/jws.txt', 'w' , encoding='utf-8') as f:
+    jws_data_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cache', 'jws.txt')
+    users_data_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cache', 'users.txt')
+    with open(jws_data_path, 'w', encoding='utf-8') as f:
         f.write(str(jws_data).replace("'", '"'))
-    with open('./cache/users.txt', 'w' , encoding='utf-8') as f:
+    with open(users_data_path, 'w', encoding='utf-8') as f:
         f.write(str(users_data).replace("'", '"'))

@@ -4,7 +4,11 @@ import time
 import yaml
 import yagmail
 import re
+import os
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+jws_data_path = os.path.join(current_dir, 'cache', 'jws.txt')
+config_path = os.path.join(current_dir, 'cache', 'config.yaml')
 
 def Login(headers, username, password):
     login_url = 'https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/username'
@@ -43,7 +47,7 @@ def testLoginStatus(headers, cookie):
 
 def GetJWData():
     try:
-        with open('./cache/jws.txt', 'r' , encoding='utf-8') as f:
+        with open(jws_data_path, 'r' , encoding='utf-8') as f:
             jws_data = json.loads(f.read())
             print("读取现存jws文件成功！")
             return jws_data
@@ -56,7 +60,7 @@ def GetJWData():
 
 
 def GetConfigs():
-    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
@@ -180,5 +184,5 @@ if __name__ == '__main__':
     mail = ReturnMail(mails)
     jws_data = GetJWData()
     main()
-    with open('./cache/jws.txt', 'w' , encoding='utf-8') as f:
+    with open(jws_data_path, 'w' , encoding='utf-8') as f:
         f.write(str(jws_data).replace("'", '"'))
