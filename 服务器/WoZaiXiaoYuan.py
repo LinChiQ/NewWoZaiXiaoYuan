@@ -76,7 +76,9 @@ def GetLocation(config_locations):
             locations.append(location[:location.index(_) + 1])
             location = location[location.index(_) + 1:]
     locate = locations.copy()
-    with open('./cache/location.json', 'r', encoding='utf-8') as f:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, 'cache', 'location.json')
+    with open(file_path, 'r', encoding='utf-8') as f:
         txt = json.loads(f.read())
     datas = []
     while len(locations) != 1:
@@ -297,3 +299,4 @@ if __name__ == "__main__":
         f.write(str(jws_data).replace("'", '"'))
     with open(users_data_path, 'w', encoding='utf-8') as f:
         f.write(str(users_data).replace("'", '"'))
+
