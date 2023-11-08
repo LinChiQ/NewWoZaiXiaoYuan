@@ -36,6 +36,12 @@ Python3.7版本及以上
 ### 邮箱配置：
 请将配置文件夹cache与程序本体放在同一路径下。
 
+```
+- WoZaiXiaoYuan.py
+- cache
+  - config.yaml
+  - location.json
+```
 
 第一行填写邮箱的地址以及邮箱申请的SMTP服务授权密码，邮箱SMTP服务器域名，下面以163邮箱为例：
 
