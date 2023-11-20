@@ -32,14 +32,14 @@ def Login(headers, username, password):
 
 def testLoginStatus(headers, cookie):
     # 用任意需要鉴权的接口即可，这里随便选了一个
-    url = "https://student.wozaixiaoyuan.com/heat/getTodayHeatList.json"
-    headers['Host'] = "student.wozaixiaoyuan.com"
+    url = "https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch"
+    headers['Host'] = "gw.wozaixiaoyuan.com"
     headers['Cookie'] = cookie
-    res = requests.post(url, headers=headers)
+    res = requests.get(url, headers=headers)
     text = json.loads(res.text)
     if text['code'] == 0:
         return True
-    elif text['code'] == -10:
+    elif text['code'] == 103:
         return False
     else:
         return 0
