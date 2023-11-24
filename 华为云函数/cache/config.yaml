@@ -1,6 +1,6 @@
 mail_address: aaa@163.com # 邮箱地址
 password: aaa # 邮箱授权码
-host: smtp@163.com # 邮箱SMTP地址
+host: 220.181.15.161 # 将邮箱SMTP服务器解析为IP地址防止域名解析错误，当前IP为163服务器的IP，如使用其他请修改
 
 ---
 
