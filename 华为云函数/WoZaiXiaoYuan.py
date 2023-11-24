@@ -213,9 +213,9 @@ def Start():
                 mail.send(config['receive'] , '返校成功！' , '返校成功！')
             else:
                 mail.send(config['receive'] , '返校失败！' , '返校失败！请查看！')
+        print("获取打卡项目...")
         batch = GetUnDo(headers, username)
         if not batch:
             continue
         answers = GetEachUser(username, headers, batch, config)
         Punch(headers, batch, answers, config['receive'], username)
-
