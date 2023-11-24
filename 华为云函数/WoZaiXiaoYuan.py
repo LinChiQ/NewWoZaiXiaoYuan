@@ -71,7 +71,7 @@ def GetLocation(config_locations):
             locations.append(location[:location.index(_) + 1])
             location = location[location.index(_) + 1:]
     locate = locations.copy()
-    with open('./cache/location.json', 'r', encoding='utf-8') as f:
+    with open('code/cache/location.json', 'r', encoding='utf-8') as f:
         txt = json.loads(f.read())
     datas = []
     while len(locations) != 1:
@@ -109,7 +109,7 @@ def ReturnMail(mails):
 
 
 def GetConfigs():
-    with open('./cache/config.yaml', 'r', encoding='utf-8') as f:
+    with open('code/cache/config.yaml', 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
@@ -181,7 +181,11 @@ def BackToSchool(headers_one , cookie):
             return False
 
 
-def main():
+def Start():
+    global configs, mail
+    configs = GetConfigs()
+    mails = next(configs)
+    mail = ReturnMail(mails)
     for config in configs:
         username = config['username']
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
@@ -215,9 +219,3 @@ def main():
         answers = GetEachUser(username, headers, batch, config)
         Punch(headers, batch, answers, config['receive'], username)
 
-
-if __name__ == "__main__":
-    configs = GetConfigs()
-    mails = next(configs)
-    mail = ReturnMail(mails)
-    main()
