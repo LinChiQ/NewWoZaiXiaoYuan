@@ -102,7 +102,7 @@ latitude填入打卡纬度
 
 配置文件如下图：
 
-![avatar](https://img-blog.csdnimg.cn/bd053620e86a418d9d2be5b34a396bdc.png)
+![avatar](https://smms.app/image/4UoCGwjVvsErlPg)
 
 
 ## 代码使用
