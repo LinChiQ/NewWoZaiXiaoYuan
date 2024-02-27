@@ -1,6 +1,7 @@
 mail_address: aaa@163.com # 邮箱地址
 password: aaa # 邮箱授权码
 host: smtp@163.com # 邮箱SMTP地址
+school: 景德镇大学 # 填写对应学校名称
 
 ---
 
