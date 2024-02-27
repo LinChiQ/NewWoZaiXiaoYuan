@@ -5,13 +5,40 @@ import yaml
 import time
 import re
 import os
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from base64 import b64encode
+
+
+def encrypt(t, e):
+    t = str(t)
+    key = e.encode('utf-8')
+    cipher = AES.new(key, AES.MODE_ECB)
+    padded_text = pad(t.encode('utf-8'), AES.block_size)
+    encrypted_text = cipher.encrypt(padded_text)
+    return b64encode(encrypted_text).decode('utf-8')
 
 
 def Login(headers, username, password):
+    headers00 = {
+        "accept": "application/json, text/plain, */*",
+        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1 Edg/119.0.0.0"}
+    url00 = "https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/getSchoolList"
+    response00 = requests.get(url00, headers=headers00)
+    school_data = json.loads(response00.text)['data']
+    def find_school_id(school_name, data):
+        for school in data:
+            if school['name'] == school_name:
+                return school['id']
+        return None
+    school_id = find_school_id(school, school_data)
+    key = (str(username) + "0000000000000000")[:16]
+    encrypted_text = encrypt(password, key)
     login_url = 'https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/username'
     params = {
-        'username': username,
-        'password': password
+        "schoolId": school_id,
+        "username": username,
+        "password": encrypted_text
     }
     login_req = requests.post(login_url, params=params, headers=headers)
     text = json.loads(login_req.text)
@@ -19,13 +46,11 @@ def Login(headers, username, password):
         print(f"{username}账号登陆成功！")
         set_cookie = login_req.headers['Set-Cookie']
         jws = re.search(r'JWSESSION=.*?;', str(set_cookie)).group(0)
-        wzxy = re.search(r'WZXYSESSION=.*?;', str(set_cookie)).group(0)
-        cookie = f'{jws} {wzxy}'
+        cookie = jws
         return cookie
     else:
         print(f"{username}登陆失败，请检查账号密码！")
         return False
-
 
 def testLoginStatus(headers, cookie):
     # 用任意需要鉴权的接口即可，这里随便选了一个
@@ -40,7 +65,6 @@ def testLoginStatus(headers, cookie):
         return False
     else:
         return 0
-
 
 def GetUnDo(headers, username):
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch'
@@ -262,7 +286,7 @@ def main():
             'Host': 'gw.wozaixiaoyuan.com',
             'Connection': 'keep-alive',
             'Accept': 'application/json, text/plain, */*',
-            'Cookie': cookie,
+            "Cookie": cookie,
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91',
             'Content-Type': 'application/json;charset=UTF-8',
             'X-Requested-With': 'com.tencent.mm',
@@ -289,6 +313,7 @@ def main():
 if __name__ == "__main__":
     configs = GetConfigs()
     mails = next(configs)
+    school = mails['school']
     mail = ReturnMail(mails)
     jws_data = GetJWData()
     users_data = GetUsers()
@@ -299,4 +324,5 @@ if __name__ == "__main__":
         f.write(str(jws_data).replace("'", '"'))
     with open(users_data_path, 'w', encoding='utf-8') as f:
         f.write(str(users_data).replace("'", '"'))
+
 
