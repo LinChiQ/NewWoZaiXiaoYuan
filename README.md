@@ -22,6 +22,7 @@
 - [x] 2023.11.20 修改代码中的检查登陆URL
 - [x] 2023.11.1 我在校园取消JWSESSION，修改为Cookie，已同步更新
 - [x] 2023.5.24 取消问题答案选项，修改为返寝打卡
+- [x] 2024.2.27 我在校园登陆功能更新，增加AES加密与学校选择，已同步更新，登陆部分参考[mudea661-daily仓库](https://github.com/mudea661/daily/)
 
 
 ### 使用说明：
@@ -30,6 +31,8 @@ Python3.7版本及以上
 - pip install requests
 
 - pip install yagmail
+
+- pip install pycryptodome
 
 ---
 
