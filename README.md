@@ -28,11 +28,7 @@
 ### 使用说明：
 Python3.7版本及以上
 
-- pip install requests
-
-- pip install yagmail
-
-- pip install pycryptodome
+`pip install -r requirements.txt`
 
 ---
 
@@ -119,15 +115,8 @@ latitude填入打卡纬度
 
 - 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
+2. Github Action的使用
 
-2.华为云函数运行
-
-
-- python版本选择>=Python3.7
-
-> 具体可见这篇文章：https://blog.csdn.net/qq_28778001/article/details/124891438
-
-将config文件填写好后，将WoZaiXiaoYuan.py，index.py，GoOut.py，cache文件夹统一打包为zip文件上传至函数云中
 
 华为云函数中自动判断当前时间，若为晚上8点之前运行，则执行外出报备，8点后执行为运行打卡，具体时间可修改index.py中的时间
 
