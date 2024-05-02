@@ -24,6 +24,7 @@ def Login(headers, username, password):
     url00 = "https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/getSchoolList"
     response00 = requests.get(url00, headers=headers00)
     school_data = json.loads(response00.text)['data']
+
     def find_school_id(school_name, data):
         for school in data:
             if school['name'] == school_name:
@@ -52,23 +53,6 @@ def Login(headers, username, password):
     else:
         print(f"{username}登陆失败，请检查账号密码！")
         return False
-
-
-def testLoginStatus(headers, jws, wzxySession):
-    # 用任意需要鉴权的接口即可，这里随便选了一个
-    url = "https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch"
-    headers['Host'] = "gw.wozaixiaoyuan.com"
-    headers['cookie'] = f'JWSESSION={jws}'
-    headers['cookie'] = f'JWSESSION={jws}'
-    headers['cookie'] = f'WZXYSESSION={wzxySession}'
-    res = requests.get(url, headers=headers)
-    text = json.loads(res.text)
-    if text['code'] == 0:
-        return True
-    elif text['code'] == 103:
-        return False
-    else:
-        return 0
 
 
 def GetUnDo(headers, username):
@@ -154,7 +138,7 @@ def main():
     login_headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
     jws, wzxySession = Login(login_headers, username,
                              os.environ['wzxy_password'])
-    if testLoginStatus(headers, jws, wzxySession):
+    if jws:
         headers = {
             'Host': 'gw.wozaixiaoyuan.com',
             'Connection': 'keep-alive',
