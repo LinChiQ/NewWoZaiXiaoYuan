@@ -100,7 +100,7 @@ def GetLocation(config_locations):
                     txt = i['children']
                 except KeyError:
                     break
-    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['longitude']}/{config_locations['latitude']}"
+    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{os.environ['punch_longitude']}/{os.environ['punch_latitude']}"
                 }
     return location
 
