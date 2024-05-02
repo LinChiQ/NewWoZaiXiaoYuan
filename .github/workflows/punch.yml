@@ -1,4 +1,4 @@
-name: WZXY_Punch
+name: 我在校园打卡
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
 
 jobs:
-  USER_01:
+  User01:
     runs-on: ubuntu-latest
     environment: CONFIG_01
     steps:
@@ -19,7 +19,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run script
+    - name: 执行打卡
       env:
         school_name: ${{secrets.school_name}}
         receive_mail: ${{secrets.receive_mail}}
@@ -31,7 +31,7 @@ jobs:
         wzxy_password: ${{secrets.wzxy_password}}
       run: python actionVersion.py
 
-  # USER_02:
+  # User02:
   #   runs-on: ubuntu-latest
   #   environment: CONFIG_02
   #   steps:
@@ -44,7 +44,7 @@ jobs:
   #     run: |
   #       python -m pip install --upgrade pip
   #       pip install -r requirements.txt
-  #   - name: Run script
+  #   - name: 执行打卡
   #     env:
   #       school_name: ${{secrets.school_name}}
   #       receive_mail: ${{secrets.receive_mail}}
