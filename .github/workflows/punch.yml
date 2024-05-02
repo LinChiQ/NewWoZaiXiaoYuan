@@ -1,37 +1,57 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
-name: Python application
+name: WZXY_Punch
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 14 * * *' # 每天晚上10点执行（UTC时间）
-
-permissions:
-  contents: read
+    - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
 
 jobs:
-  build:
+  USER_01:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
+    environment: CONFIG_01
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
-    - name: Install dependencies
+        python-version: 3.9
+    - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+        pip install -r requirements.txt
+    - name: Run script
+      env:
+        school_name: ${{secrets.school_name}}
+        receive_mail: ${{secrets.receive_mail}}
+        mail_address: ${{secrets.mail_address}}
+        mail_password: ${{secrets.mail_password}}
+        mail_host: ${{secrets.mail_host}}
+        punch_location: ${{secrets.punch_location}}
+        wzxy_username: ${{secrets.wzxy_username}}
+        wzxy_password: ${{secrets.wzxy_password}}
+      run: python actionVersion.py
+
+  # USER_02:
+  #   runs-on: ubuntu-latest
+  #   environment: CONFIG_02
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Set up Python 3.9
+  #     uses: actions/setup-python@v4
+  #     with:
+  #       python-version: 3.9
+  #   - name: 安装依赖
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install -r requirements.txt
+  #   - name: Run script
+  #     env:
+  #       school_name: ${{secrets.school_name}}
+  #       receive_mail: ${{secrets.receive_mail}}
+  #       mail_address: ${{secrets.mail_address}}
+  #       mail_password: ${{secrets.mail_password}}
+  #       mail_host: ${{secrets.mail_host}}
+  #       punch_location: ${{secrets.punch_location}}
+  #       wzxy_username: ${{secrets.wzxy_username}}
+  #       wzxy_password: ${{secrets.wzxy_password}}
+  #     run: python actionVersion.py
