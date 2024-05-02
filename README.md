@@ -23,6 +23,7 @@
 - [x] 2023.11.1 我在校园取消JWSESSION，修改为Cookie，已同步更新
 - [x] 2023.5.24 取消问题答案选项，修改为返寝打卡
 - [x] 2024.2.27 我在校园登陆功能更新，增加AES加密与学校选择，已同步更新，登陆部分参考[mudea661-daily仓库](https://github.com/mudea661/daily/)
+- [x] 2024.5.2 由于依赖新增过多，代码新增Github Actions的使用，去除掉华为云函数部分的使用
 
 
 ### 使用说明：
@@ -116,8 +117,51 @@ latitude填入打卡纬度
 - 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
 2. Github Action的使用
+   
+   **Fork本仓库**
+
+![image-20240502201050428](https://gitee.com/lateyoung222/images/raw/master/image-20240502201050428.png)
+
+​	**配置打卡参数**
+
+- 在Fork后的新仓库中，点击`Settings`，进入左侧栏目中的`Environments`，点击`New environment`，命名为`CONFIG_01`
+  ![image-20240502201612262](https://gitee.com/lateyoung222/images/raw/master/image-20240502201612262.png)
+
+- 在下方的`Environment secrets`中新增Secret，所需Secret有：
+
+  ![image-20240502201702880](https://gitee.com/lateyoung222/images/raw/master/image-20240502201702880.png)
+
+  - `school_name` 填写对应的学校名称，如昆明理工大学
+  - `receive_mail` 填写所接受消息通知的邮件号
+  - `mail_address` 填写**发送邮件通知**的邮件号
+  - `mail_password` 填写**发送邮件通知**的邮件号的授权码
+  - `mail_host` 填写**发送邮件通知**的邮件号所对应的SMTP服务器地址
+  - `punch_location` 填写想要打卡地址，对应上方服务器端的location打卡地址
+  - `punch_longitude` 填写对应打卡经度
+  - `punch_latitude` 填写对应打卡维度
+  - `wzxy_username` 填写我在校园登录账号，通常为手机号
+  - `wzxy_password` 填写我在校园登录密码
+
+  ![填写参考](https://gitee.com/lateyoung222/images/raw/master/image-20240502202556250.png)
+
+  
+
+  **打卡测试**
+
+- 所有参数填写完毕后，点击Actions按钮，点击左侧的**我在校园打卡**后，点击`Run workflow`，再点击绿色的`Run workflow`按钮进行测试，当Action中运行没有红色按钮即代表填写无误
+
+  ![image-20240502202805383](https://gitee.com/lateyoung222/images/raw/master/image-20240502202805383.png)
+
+- 点击开**执行打卡**中查看是否登录成功，如登录成功则可等待晚上10点自动打卡（Github Actions需要排队，可能推迟10分钟左右），如登录不成功请修改密码清楚缓存后重新填入。
+
+  ![image-20240502203613949](https://gitee.com/lateyoung222/images/raw/master/image-20240502203613949.png)
+
+  
+
+​	**多用户打卡**
+
+- 回到仓库首页，依次点击`.github/workflows/punch.yml`，将属于User02的部分取消注释后，在Environment中新增一个名为`CONFIG_02`的环境后，填入同样的Secert即可
+- 如需要第三及以上个用户，请复制User01的所有代码，复制到yml文件后方，修改为User03，然后将`environment: CONFIG_02`修改为`environment: CONFIG_03`，再在Environment中新增一个叫`CONFIG_03`的环境后填写同样的Secert即可，更多用户相同步骤，请注意新增时的**yml文件缩进**
 
 
-华为云函数中自动判断当前时间，若为晚上8点之前运行，则执行外出报备，8点后执行为运行打卡，具体时间可修改index.py中的时间
 
-将依赖文件按照文章中的方式添加至依赖包中，再在函数页面的最下面添加上依赖即可运行。
