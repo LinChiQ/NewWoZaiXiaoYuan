@@ -79,7 +79,7 @@ def GetAnswers(headers, username, batch):
 
 
 def GetLocation(config_locations):
-    location = config_locations['location']
+    location = config_locations
     locations = []
     for _ in location:
         if _ == '省' or _ == '市' or _ == '州' or _ == '区' or _ == '县' or _ == '岛' or _ == '域' or _ == '道' or _ == '路' or _ == '乡' or _ == '镇':
