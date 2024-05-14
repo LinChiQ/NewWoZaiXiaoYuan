@@ -19,7 +19,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        ping -c 3 smtp.163.com
     - name: 执行打卡
       env:
         school_name: ${{secrets.school_name}}
