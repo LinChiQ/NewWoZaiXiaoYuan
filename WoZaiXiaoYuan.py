@@ -8,6 +8,7 @@ import os
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from base64 import b64encode
+import urllib.parse
 
 
 def encrypt(t, e):
@@ -131,7 +132,10 @@ def GetEachJws(config, headers):
         print(config['username'], "尝试登陆！")
         jws, wzxySession = Login(headers, config['username'], config['password'])
         if jws is False:
-            mail.send(config['receive'], '登陆失败', '登陆失败，请检查账号密码')
+            if mail:
+                mail.send(config['receive'], "登录失败！", "登陆失败，请检查账号密码")
+            if sct_ftqq:
+                requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"登陆失败", "desp":"登陆失败，请检查账号密码"})}')
             return False
         jws_data[str(config['username'])] = f"{jws},{wzxySession}"
         return jws, wzxySession
@@ -143,18 +147,26 @@ def Punch(headers, batch, answers, receive, username):
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
-        mail.send(receive, "打卡成功！", "打卡成功！")
+        if mail:
+            mail.send(receive, "打卡成功！", "打卡成功！")
+        if sct_ftqq:
+            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡成功", "desp":"打卡成功"})}')
         return True
     else:
         print(f"{username}打卡失败！{str(txt)}\n")
-        mail.send(receive, "打卡失败！", str(txt))
+        if mail:
+            mail.send(receive, "打卡成功！", "打卡成功！")
+        if sct_ftqq:
+            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡成功", "desp":str(txt)})}')
         return False
 
 
 def ReturnMail(mails):
-    mail = yagmail.SMTP(mails['mail_address'],
-                        mails['password'], mails['host'])
-    return mail
+    if mails['mail_address']:
+        mail = yagmail.SMTP(mails['mail_address'],
+                            mails['password'], mails['host'])
+        return mail
+    return False
 
 
 def GetConfigs():
@@ -210,18 +222,6 @@ def GetJWData():
 
 
 
-def DelayBackTime(id , headers):
-    delay_url = 'https://gw.wozaixiaoyuan.com/out/mobile/out/saveDelay?' + id
-    delay_json = {"endDate":f"{time.localtime().tm_hour + 1}:00","delayContent":"事"}
-    req = requests.post(delay_url, json=delay_json, headers=headers)
-    text = json.loads(req.text)
-    if text['code'] == 0:
-        print("延期成功！")
-        return True
-    else:
-        print("延期失败！" , text)
-        return False
-
 
 
 def main():
@@ -269,6 +269,7 @@ if __name__ == "__main__":
     configs = GetConfigs()
     mails = next(configs)
     school = mails['school']
+    sct_ftqq = mails['sct_ftqq']
     mail = ReturnMail(mails)
     jws_data = GetJWData()
     users_data = GetUsers()

@@ -44,7 +44,11 @@ Python3.7版本及以上
   - location.json
 ```
 
-第一行填写邮箱的地址以及邮箱申请的SMTP服务授权密码，邮箱SMTP服务器域名，下面以163邮箱为例：
+第一行填写
+
+- 邮箱的地址以及邮箱申请的SMTP服务授权密码，邮箱SMTP服务器域名，**若不想使用邮箱推送则填空**
+
+  下面以163邮箱为例：
 
 正常登陆163邮箱后，点击上方的设置下拉栏，再点击POP3/SMTP/IMAP后，进入如下界面
 
@@ -60,17 +64,19 @@ Python3.7版本及以上
 
 ![avatar](https://img-blog.csdnimg.cn/0fb29040b4b24a6a9e9da93ed4aa42a2.png)
 
+school部分填写学校名称
+
+sct_ftqq部分填写[Server酱](https://sct.ftqq.com)的<font color="red">SendKey</font>值，若为空则代表不使用
+
+![image-20240517233108811](https://gitee.com/lateyoung222/images/raw/master/image-20240517233108811.png)
+
 
 ## 用户信息的填写：
 在username处填入我在校园登陆账号，一般为手机号；
 
 password处填入登录密码；
 
-receive处填入接收邮箱地址，可以是打卡人的QQ邮箱
-
-back处填写yes或no，表示是否自动返校
-
-out处填写yes或no，表示是否每天自动外出报备
+receive处填入接收邮箱地址，可以是打卡人的QQ邮箱，若不使用邮箱推送则填空
 
 
 location处填入打卡地址，请遵循省->市->区(市)->街道->路的五级划分填入
@@ -99,7 +105,7 @@ latitude填入打卡纬度
 
 配置文件如下图：
 
-![image.png](https://s2.loli.net/2024/02/27/4UoCGwjVvsErlPg.png)
+![image-20240517232915141](https://gitee.com/lateyoung222/images/raw/master/image-20240517232915141.png)
 
 
 ## 代码使用
@@ -133,7 +139,7 @@ latitude填入打卡纬度
 
   - `school_name` 填写对应的学校名称，如昆明理工大学
   - `receive_mail` 填写所接受消息通知的邮件号
-  - `mail_address` 填写**发送邮件通知**的邮件号
+  - `mail_address` 填写**发送邮件通知**的邮件号，若为空则代表不使用
   - `mail_password` 填写**发送邮件通知**的邮件号的授权码
   - `mail_host` 填写**发送邮件通知**的邮件号所对应的SMTP服务器地址
   - `punch_location` 填写想要打卡地址，对应上方服务器端的location打卡地址
@@ -141,6 +147,7 @@ latitude填入打卡纬度
   - `punch_latitude` 填写对应打卡维度
   - `wzxy_username` 填写我在校园登录账号，通常为手机号
   - `wzxy_password` 填写我在校园登录密码
+  - `sct_ftqq` 填写[Server酱](https://sct.ftqq.com)的<font color="red">SendKey</font>值，若为空则代表不使用
 
   ![填写参考](https://gitee.com/lateyoung222/images/raw/master/image-20240502202556250.png)
 

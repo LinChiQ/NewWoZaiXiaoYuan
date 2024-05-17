@@ -31,6 +31,7 @@ jobs:
         wzxy_password: ${{secrets.wzxy_password}}
         punch_longitude: ${{secrets.punch_longitude}}
         punch_latitude: ${{secrets.punch_latitude}}
+        sct_ftqq: ${{secrets.sct_ftqq}}
       run: python actionVersion.py
 
   # User02:

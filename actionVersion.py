@@ -6,6 +6,7 @@ import os
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from base64 import b64encode
+import urllib.parse
 
 
 def encrypt(t, e):
@@ -112,18 +113,26 @@ def Punch(headers, batch, answers, username):
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
-        mail.send(receive, "打卡成功！", "打卡成功！")
+        if mail:
+            mail.send(receive, "打卡成功！", "打卡成功！")
+        if os.environ['sct_ftqq']:
+            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡成功", "desp":"打卡成功"})}')
         return True
     else:
         print(f"{username}打卡失败！{str(txt)}\n")
-        mail.send(receive, "打卡失败！", str(txt))
+        if mail:
+            mail.send(receive, "打卡失败！", str(txt))
+        if os.environ['sct_ftqq']:
+            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡失败", "desp": str(txt)})}')
         return False
 
 
 def ReturnMail():
-    mail = yagmail.SMTP(os.environ['mail_address'],
-                        os.environ['mail_password'], os.environ['mail_host'])
-    return mail
+    if os.environ['mail_address']:
+        mail = yagmail.SMTP(os.environ['mail_address'],
+                            os.environ['mail_password'], os.environ['mail_host'])
+        return mail
+    return False
 
 
 def GetEachUser(username, headers, batch):
