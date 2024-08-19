@@ -2,15 +2,55 @@ import requests
 import json
 import yagmail
 import yaml
-import time
 import re
 import os
+import sqlite3
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from base64 import b64encode
 import urllib.parse
 
 
+def InitDB():
+    isUsers = 0
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    # 判断是否存在users表
+    tables = cursor.fetchall()
+    for table in tables:
+        if table[0] == 'users':
+            isUsers += 1
+    # 不存在users表
+    if isUsers <= 0:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                jws TEXT NOT NULL,
+                punchData TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return False
+    cursor.close()
+    conn.close()
+    return True
+
+
+def MsgSend(mails, message_title, message_info ,mail_receiver = False, sct_ftqq = False):
+    if mails['mail_address']:
+        mail = yagmail.SMTP(mails['mail_address'],
+                            mails['password'], mails['host'])
+        mail.send(mail_receiver, message_title, message_info)
+    if sct_ftqq:
+        requests.get(f'https://sctapi.ftqq.com/{sct_ftqq}.send?{urllib.parse.urlencode({"title":message_title, "desp":message_info})}')
+
+
+
+# 登陆部分
 def encrypt(t, e):
     t = str(t)
     key = e.encode('utf-8')
@@ -42,25 +82,24 @@ def Login(headers, username, password):
         "password": encrypted_text
     }
     login_req = requests.post(login_url, params=params, headers=headers)
-    print(login_req.text)
     text = json.loads(login_req.text)
     if text['code'] == 0:
         print(f"{username}账号登陆成功！")
         set_cookie = login_req.headers['Set-Cookie']
         jws = re.search(r'JWSESSION=(.*?);', str(set_cookie)).group(1)
-        wzxySession = re.search(r'WZXYSESSION=(.*?);', str(set_cookie)).group(1)
-        return jws, wzxySession
+        return jws
     else:
         print(f"{username}登陆失败，请检查账号密码！")
         return False
 
-def testLoginStatus(headers, jws, wzxySession):
+
+def testLoginStatus(headers, jws):
     # 用任意需要鉴权的接口即可，这里随便选了一个
     url = "https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch"
     headers['Host'] = "gw.wozaixiaoyuan.com"
     headers['cookie'] = f'JWSESSION={jws}'
     headers['cookie'] = f'JWSESSION={jws}'
-    headers['cookie'] = f'WZXYSESSION={wzxySession}'
+    headers['cookie'] = f'WZXYSESSION={jws}'
     res = requests.get(url, headers=headers)
     text = json.loads(res.text)
     if text['code'] == 0:
@@ -69,6 +108,95 @@ def testLoginStatus(headers, jws, wzxySession):
         return False
     else:
         return 0
+
+def GetUserJws(username):
+    # 从sqlite中拿到用户对应jws
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT jws FROM users WHERE username = ?", (username,))
+    # 获取并返回对应jws
+    jws = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jws
+
+
+def updateJWS(username, newJWS):
+    # update sqlite jws
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    # 更新数据
+    cursor.execute('''
+        UPDATE users
+        SET jws = ?
+        WHERE username = ?
+    ''', (newJWS, username))
+    # 提交更改
+    conn.commit()
+    if cursor.rowcount == 0:
+        # 更新失败
+        return False
+    cursor.close()
+    conn.close()
+    return True
+
+
+def InsertOrUpdateUserData(username, jws, punchData):
+    # 从sqlite中拿到用户对应jws
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    if user:
+        cursor.execute("UPDATE users SET punchData = ? , jws = ? WHERE username = ?", (json.dumps(punchData), jws, username))
+        conn.commit()
+        if cursor.rowcount > 0:
+            print("用户数据更新成功！")
+            cursor.close()
+            conn.close()
+            return True
+        cursor.close()
+        conn.close()
+        return False
+    else:
+        cursor.execute('''
+            INSERT INTO users (username, jws, punchData) VALUES (?,?,?)
+        ''', (username, jws, json.dumps(punchData)))
+        conn.commit()
+        if cursor.rowcount > 0:
+            print("新增用户数据成功！")
+            cursor.close()
+            conn.close()
+            return True
+        cursor.close()
+        conn.close()
+        return False
+
+
+
+def GetPunchData(headers, username, batch, location, tencentKey):
+    # 从sqlite中拿到用户对应jws
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT punchData FROM users WHERE username = ?", (username,))
+    # 尝试从数据库获取现存位置信息
+    punchData = cursor.fetchone()
+    if punchData:
+        return json.loads(punchData)
+    PunchData = {}
+    locationType_url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getForm?batch='+ batch
+    res = requests.get(locationType_url, headers=headers)
+    locationType = json.loads(res.text)['data']['locationType']
+    PunchData.update({"type": 0, "locationMode": 0, "locationType": locationType})
+    geocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"address": location, "key": tencentKey})
+    geocode_data = json.loads(geocode.text)
+    if geocode_data['status'] == 0:
+        reverseGeocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"location": f"{geocode_data['result']['location']['lat']},{geocode_data['result']['location']['lng']}", "key": tencentKey})
+        reverseGeocode_data = json.loads(reverseGeocode.text)
+        if reverseGeocode_data['status'] == 0:
+            PunchData.update({"location": reverseGeocode_data['result']['ad_info']['name'].replace(",", "/") + '/' + reverseGeocode_data['result']['address_reference']['town']['title'] + '/' + reverseGeocode_data['result']['address_reference']['landmark_l1']['title'] + '/156' +  reverseGeocode_data['result']['ad_info']['adcode'] + '/' + reverseGeocode_data['result']['ad_info']['city_code'] + '/' + reverseGeocode_data['result']['address_reference']['town']['id'] + '/' + geocode_data['result']['location']['lng'] + '/' + geocode_data['result']['location']['lat']})
+            return PunchData
+
 
 def GetUnDo(headers, username):
     url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch'
@@ -81,165 +209,95 @@ def GetUnDo(headers, username):
     return False
 
 
-def GetAnswers(headers, username, batch):
-    try:
-        return users_data[str(username)]
-    except Exception as e:
-        print("未找到现存答案信息！", e)
-    answers = {}
-    url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getForm?batch='+batch
-    res = requests.get(url, headers=headers)
-    data = json.loads(res.text)
-    locationType = data['data']['locationType']
-    answers.update({"type": 0, "locationMode": 0, "locationType": locationType})
-    print(f"获取{username}的参数成功！")
-    return answers
 
-
-def GetLocation(config_locations):
-    location = config_locations['location']
-    locations = []
-    for _ in location:
-        if _ == '省' or _ == '市' or _ == '州' or _ == '区' or _ == '县' or _ == '岛' or _ == '域' or _ == '道' or _ == '路' or _ == '乡' or _ == '镇':
-            locations.append(location[:location.index(_) + 1])
-            location = location[location.index(_) + 1:]
-    locate = locations.copy()
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, 'cache', 'location.json')
-    with open(file_path, 'r', encoding='utf-8') as f:
-        txt = json.loads(f.read())
-    datas = []
-    while len(locations) != 1:
-        for i in txt:
-            if i['label'] == locations[0]:
-                datas.append(i['value'])
-                locations.pop(0)
-                try:
-                    txt = i['children']
-                except KeyError:
-                    break
-    location = {"location": f"中国/{locate[0]}/{locate[1]}/{locate[2]}/{locate[3]}/{locate[4]}/156/{datas[-2]}/156{datas[1]}/{datas[-1]}/{config_locations['longitude']}/{config_locations['latitude']}"
-                }
-    return location
-
-
-def GetEachJws(config, headers):
-    try:
-        jws = jws_data[config['username']].split(',')[0]
-        wzxySession = jws_data[config['username']].split(',')[1]
-        return jws, wzxySession
-    except:
-        print(config['username'], "尝试登陆！")
-        jws, wzxySession = Login(headers, config['username'], config['password'])
-        if jws is False:
-            if mail:
-                mail.send(config['receive'], "登录失败！", "登陆失败，请检查账号密码")
-            if sct_ftqq:
-                requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"登陆失败", "desp":"登陆失败，请检查账号密码"})}')
-            return False
-        jws_data[str(config['username'])] = f"{jws},{wzxySession}"
-        return jws, wzxySession
-
-
-def Punch(headers, batch, answers, receive, username):
-    url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+batch
-    res = requests.post(url, json=answers, headers=headers)
+def Punch(headers, batch, punchData, username, receive=False, sct_ftqq=False):
+    url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+ batch
+    res = requests.post(url, json=punchData, headers=headers)
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
-        if mail:
-            mail.send(receive, "打卡成功！", "打卡成功！")
-        if sct_ftqq:
-            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡成功", "desp":"打卡成功"})}')
+        MsgSend(mails, "打卡成功！", f"{username}归寝打卡成功！", receive, sct_ftqq)
         return True
     else:
         print(f"{username}打卡失败！{str(txt)}\n")
-        if mail:
-            mail.send(receive, "打卡成功！", "打卡成功！")
-        if sct_ftqq:
-            requests.get(f'https://sctapi.ftqq.com/{os.environ["sct_ftqq"]}.send?{urllib.parse.urlencode({"title":"打卡成功", "desp":str(txt)})}')
+        MsgSend(mails, "打卡失败！", f"{username}归寝打卡失败！{str(res.text)}", receive, sct_ftqq)
         return False
 
 
-def ReturnMail(mails):
-    if mails['mail_address']:
-        mail = yagmail.SMTP(mails['mail_address'],
-                            mails['password'], mails['host'])
-        return mail
-    return False
-
-
 def GetConfigs():
-    current_path = os.path.abspath(__file__)
-    config_path = os.path.join(os.path.dirname(current_path), 'cache', 'config.yaml')
     with open(config_path, 'r', encoding='utf-8') as f:
         configs = yaml.safe_load_all(f.read())
     return configs
 
 
+# 蓝牙签到模块开始 By Mudea661
+def upload_blue_data(blue1, blue2, headers, id, signid, mails, config):
+    data = {
+        "blue1": blue1,
+        "blue2": list(blue2.values())
+    }
+    response = requests.post(
+        url=f"https://gw.wozaixiaoyuan.com/dormSign/mobile/receive/doSignByDevice?id={id}&signId={signid}",
+        headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        response_data = response.json()
+        if response_data.get("code") == 0:
+            MsgSend(mails,f"账号- {config['username']} -蓝牙打卡成功！", f"账号- {config['username']} -蓝牙打卡成功！", config['receive'], config['sct_ftqq'])
+            return 0
+        else:
+            MsgSend(mails,f"账号- {config['username']} -蓝牙打卡失败！", f"账号- {config['username']} -蓝牙打卡失败！", config['receive'], config['sct_ftqq'])
+            return 1
+    else:
+        return 1
 
-def GetUsers():
+
+def doBluePunch(headers, username, config, mails):
+    # 获取签到日志
+    sign_logs_url = "https://gw.wozaixiaoyuan.com/dormSign/mobile/receive/getMySignLogs"
+    sign_logs_params = {
+        "page": 1,
+        "size": 10
+    }
     try:
-        current_path = os.path.abspath(__file__)
-        users_path = os.path.join(os.path.dirname(current_path), 'cache', 'users.txt')
-        with open(users_path, 'r', encoding='utf-8') as f:
-            users_data = json.loads(f.read().replace("'", '"'))
-            print("读取现存users文件成功！")
-            return users_data
-    except FileNotFoundError:
-        print("users文件不存在，正在创建！")
-        return {}
-    except Exception as e:
-        print("未知错误", e)
-        exit(0)
-
-
-def GetEachUser(username, headers, batch, config):
-    try:
-        return users_data[username]
+        response = requests.get(sign_logs_url, headers=headers, params=sign_logs_params)
+        data_ids = response.json()
+        location_id = data_ids["data"][0]["locationId"]
+        sign_id = data_ids["data"][0]["signId"]
+        major = data_ids["data"][0]["deviceList"][0]["major"]
+        uuid = data_ids["data"][0]["deviceList"][0]["uuid"]
+        blue1 = [uuid.replace("-", "") + str(major)]
+        blue2 = {"UUID1": uuid}
     except:
-        answers= GetAnswers(headers, username, batch)
-        location = GetLocation(config['locations'])
-        answers.update(location)
-        users_data[str(username)] = answers
-        return answers
+        MsgSend(mails,f"账号- {username} -获取签到列表出错！", f"账号- {username} -获取签到列表出错！", config['receive'], config['sct_ftqq'])
+        return 0
+    return upload_blue_data(blue1, blue2, headers, location_id, sign_id, mails, config)
 
-
-def GetJWData():
-    try:
-        current_path = os.path.abspath(__file__)
-        jws_path = os.path.join(os.path.dirname(current_path), 'cache', 'jws.txt')
-        with open(jws_path, 'r', encoding='utf-8') as f:
-            jws_data = json.loads(f.read())
-            print("读取现存jws文件成功！")
-            return jws_data
-    except FileNotFoundError:
-        print("jws文件不存在，正在创建！")
-        return {}
-    except Exception as e:
-        print("未知错误", e)
-        exit(0)
-
-
-
-
+# 蓝牙模块结束
 
 def main():
     for config in configs:
         username = config['username']
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
-        jws, wzxySession = GetEachJws(config, headers)
+        jws = GetUserJws(username)
         if jws:
-            login_code = testLoginStatus(headers, jws, wzxySession)
+            print(username, "尝试使用上次登陆jws。")
+            login_code = testLoginStatus(headers, jws)
+            if not login_code:
+                print(username, "jws失效！尝试重新登录。")
+                jws = Login(headers, config['username'], config['password'])
+                if not jws:
+                    print(username, "尝试登陆失败，请检查帐号密码！")
+                    MsgSend(mails, "登陆失败！", "账号或密码错误，请检查！", config['receive'], config['sct_ftqq'])
+                    continue
+                print(username, "重新登录成功，正在更新对应jws！")
+                updateJWS(username, jws)
         else:
-            continue
-        if login_code is False:
-            print(config['username'], "jws失效！")
-            jws, wzxySession = Login(headers, config['username'], config['password'])
-            if jws is False:
+            print(username, "未存在JWS，进行首次登陆。")
+            jws = Login(headers, config['username'], config['password'])
+            if not jws:
+                print(username, "尝试登陆失败，请检查帐号密码！")
+                MsgSend(mails, "登陆失败！", "账号或密码错误，请检查！", config['receive'], config['sct_ftqq'])
                 continue
-            print("jws文件更新成功")
-            jws_data[config['username']] = f"{jws},{wzxySession}"
         headers = {
             'Host': 'gw.wozaixiaoyuan.com',
             'Connection': 'keep-alive',
@@ -247,7 +305,7 @@ def main():
             'jwsession': jws,
             "cookie": f'JWSESSION={jws}',
             "cookie": f'JWSESSION={jws}',
-            "cookie": f'WZXYSESSION={wzxySession}',
+            "cookie": f'WZXYSESSION={jws}',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91',
             'Content-Type': 'application/json;charset=UTF-8',
             'X-Requested-With': 'com.tencent.mm',
@@ -258,27 +316,27 @@ def main():
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
         }
-        batch = GetUnDo(headers, username)
-        if not batch:
-            continue
-        answers = GetEachUser(username, headers, batch, config)
-        Punch(headers, batch, answers, config['receive'], username)
+        if config['dorm_sign']:
+            batch = GetUnDo(headers, username)
+            if not batch:
+                continue
+            punchData = GetPunchData(headers, username, batch, config['location'])
+            Punch(headers, batch, punchData, username, config['receive'], config['sct_ftqq'])
+            InsertOrUpdateUserData(username, jws, punchData)
+        if config['blue_sign']:
+            # 蓝牙打卡
+            doBluePunch(headers, username, config, mails)
 
 
 if __name__ == "__main__":
+    current_path = os.path.abspath(__file__)
+    config_path = os.path.join(os.path.dirname(current_path), 'cache', 'config.yaml')
+    db_path = os.path.join(os.path.dirname(current_path), 'cache', 'userdata.db')
     configs = GetConfigs()
     mails = next(configs)
     school = mails['school']
-    sct_ftqq = mails['sct_ftqq']
-    mail = ReturnMail(mails)
-    jws_data = GetJWData()
-    users_data = GetUsers()
+    InitDB()
     main()
-    jws_data_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cache', 'jws.txt')
-    users_data_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cache', 'users.txt')
-    with open(jws_data_path, 'w', encoding='utf-8') as f:
-        f.write(str(jws_data).replace("'", '"'))
-    with open(users_data_path, 'w', encoding='utf-8') as f:
-        f.write(str(users_data).replace("'", '"'))
+
 
 
