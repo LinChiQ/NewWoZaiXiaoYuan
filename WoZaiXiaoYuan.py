@@ -44,9 +44,15 @@ def MsgSend(mails, message_title, message_info ,mail_receiver = False, sct_ftqq 
     if mails['mail_address']:
         mail = yagmail.SMTP(mails['mail_address'],
                             mails['password'], mails['host'])
-        mail.send(mail_receiver, message_title, message_info)
+        try:
+            mail.send(mail_receiver, message_title, message_info)
+        except Exception as e:
+            print("推送出错！", str(e))
     if sct_ftqq:
-        requests.get(f'https://sctapi.ftqq.com/{sct_ftqq}.send?{urllib.parse.urlencode({"title":message_title, "desp":message_info})}')
+        try:
+            requests.get(f'https://sctapi.ftqq.com/{sct_ftqq}.send?{urllib.parse.urlencode({"title":message_title, "desp":message_info})}')
+        except Exception as e:
+            print("推送出错！", str(e))
 
 
 
@@ -194,7 +200,8 @@ def GetPunchData(headers, username, batch, location, tencentKey):
         reverseGeocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"location": f"{geocode_data['result']['location']['lat']},{geocode_data['result']['location']['lng']}", "key": tencentKey})
         reverseGeocode_data = json.loads(reverseGeocode.text)
         if reverseGeocode_data['status'] == 0:
-            PunchData.update({"location": reverseGeocode_data['result']['ad_info']['name'].replace(",", "/") + '/' + reverseGeocode_data['result']['address_reference']['town']['title'] + '/' + reverseGeocode_data['result']['address_reference']['landmark_l1']['title'] + '/156' +  reverseGeocode_data['result']['ad_info']['adcode'] + '/' + reverseGeocode_data['result']['ad_info']['city_code'] + '/' + reverseGeocode_data['result']['address_reference']['town']['id'] + '/' + geocode_data['result']['location']['lng'] + '/' + geocode_data['result']['location']['lat']})
+            PunchData.update({"location": reverseGeocode_data['result']['ad_info']['name'].replace(",", "/") + '/' + reverseGeocode_data['result']['address_reference']['town']['title'] + '/' + reverseGeocode_data['result']['address_reference']['landmark_l1']['title'] + '/156' +  reverseGeocode_data['result']['ad_info']['adcode'] + '/' + reverseGeocode_data['result']['ad_info']['city_code'] + '/' + reverseGeocode_data['result']['address_reference']['town']['id'] + '/' + str(geocode_data['result']['location']['lng']) + '/' + str(geocode_data['result']['location']['lat'])})
+            
             return PunchData
 
 
@@ -320,7 +327,7 @@ def main():
             batch = GetUnDo(headers, username)
             if not batch:
                 continue
-            punchData = GetPunchData(headers, username, batch, config['location'])
+            punchData = GetPunchData(headers, username, batch, config['location'], tencentKey)
             Punch(headers, batch, punchData, username, config['receive'], config['sct_ftqq'])
             InsertOrUpdateUserData(username, jws, punchData)
         if config['blue_sign']:
@@ -335,6 +342,7 @@ if __name__ == "__main__":
     configs = GetConfigs()
     mails = next(configs)
     school = mails['school']
+    tencentKey = mails['tencent_map']
     InitDB()
     main()
 
