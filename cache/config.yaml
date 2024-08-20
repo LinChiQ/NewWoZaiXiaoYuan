@@ -9,7 +9,7 @@ tencent_map: NN2BZ-HGNCG-PLSQD-*****-*****-***** # 填写腾讯地图API KEY
 username: 13212345111 # 我在校园用户名
 password: abcdefg # 我在校园密码
 receive: 123456@qq.com # 接受邮箱地址，如不使用填空
-sct_ftqq: # server酱地址，如不使用填空，但邮箱和server酱不能都为空
+sct_ftqq: # server酱地址，如不使用填空
 blue_sign: no # 是否进行蓝牙打卡，no/yes
 dorm_sign: yes # 是否进行归寝打卡
 location: 云南省昆明市呈贡区吴家营街道樱花大道 # 打卡地址，省->区(市)->市->街道->路

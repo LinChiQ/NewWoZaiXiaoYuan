@@ -24,6 +24,7 @@
 - [x] 2023.5.24 取消问题答案选项，修改为返寝打卡
 - [x] 2024.2.27 我在校园登陆功能更新，增加AES加密与学校选择，已同步更新，登陆部分参考[mudea661-daily仓库](https://github.com/mudea661/daily/)
 - [x] 2024.5.2 由于依赖新增过多，代码新增Github Actions的使用，去除掉华为云函数部分的使用
+- [x] 2024.8.20 重构代码，使用SQLite数据库对用户JWSESSION以及打卡数据进行存储，使用腾讯地图API对用户打卡地址进行解析处理，新增消息模块里的蓝牙签到（By Mudea661），同步更新README文件。
 
 
 ### 使用说明：
@@ -31,18 +32,24 @@ Python3.7版本及以上
 
 `pip install -r requirements.txt`
 
----
 
-## 配置文件的使用：
-### 邮箱配置：
-请将配置文件夹cache与程序本体放在同一路径下。
+
+#### 文件结构
 
 ```
 - WoZaiXiaoYuan.py
+- actionVersion.py
+- blueTooth.py (Mudea661提供的蓝牙签到源码)
+- requirements.txt
+- README.md
 - cache
   - config.yaml
-  - location.json
+  - userdata.db (服务器初运行时自动添加)
 ```
+
+
+
+#### `config.yaml`文件填写
 
 第一行填写
 
@@ -56,7 +63,7 @@ Python3.7版本及以上
 点击开启这两个服务，会提示用绑定手机号发送验证码，发送即可
 
 
-开启后向下滑，找到新增授权密码，点击新增，手机发送验证码后，将所得的授权密码填入config.yml文件之中
+开启后向下滑，找到新增授权密码，点击新增，手机发送验证码后，将所得的授权密码填入config.yaml文件之中
 
 ![avatar](https://img-blog.csdnimg.cn/29ee0dea2b7d4174b2b6ff61922e06d4.png)
 
@@ -64,62 +71,74 @@ Python3.7版本及以上
 
 ![avatar](https://img-blog.csdnimg.cn/0fb29040b4b24a6a9e9da93ed4aa42a2.png)
 
-school部分填写学校名称
+`school` 部分填写学校名称
 
-sct_ftqq部分填写[Server酱](https://sct.ftqq.com)的<font color="red">SendKey</font>值，若为空则代表不使用
+`tencent_map` 处填写**腾讯地图API创建的应用的KEY值**，并分配该应用**地址解析与逆地址解析**的配额，操作如下：
 
-![image-20240517233108811](https://gitee.com/lateyoung222/images/raw/master/image-20240517233108811.png)
+1. 打开[腾讯地图开发平台](https://lbs.qq.com/map/)，点击右上角进行登陆/注册成为个人开发者，进入控制台，点击左侧的应用管理 -> 我的应用，创建一个新应用
+
+![image-20240820092615089](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820092615089.png)
+
+2. 创建应用后在该应用中点击添加KEY，KEY名称随意，勾选下方的`WebServiceAPI`即可点击确定，**记录下显示出的KEY值填入config文件中的`tencent_map`处**
+
+   ![image-20240820092851075](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820092851075.png)
+
+3. 为新增的KEY进行配额分配，点击左侧配额管理 -> 账户额度，接口类型选择地址，地点类，为**逆地址解析**与**地址解析**分配额度以及并发量
+
+   ![image-20240820093252746](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820093252746.png)
+
+   ![image-20240820093312431](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820093312431.png)
+
+
 
 
 ## 用户信息的填写：
-在username处填入我在校园登陆账号，一般为手机号；
+`username` 处填入我在校园登陆账号，一般为手机号；
 
-password处填入登录密码；
+`password` 处填入登录密码；
 
-receive处填入接收邮箱地址，可以是打卡人的QQ邮箱，若不使用邮箱推送则填空
+`receive` 处填入接收邮箱地址，可以是打卡人的QQ邮箱，若不使用邮箱推送则填空
+
+`sct_ftqq` 部分填写[Server酱](https://sct.ftqq.com)的<font color="red">SendKey</font>值，若为空则代表不使用
+
+![image-20240517233108811](https://gitee.com/lateyoung222/images/raw/master/image-20240517233108811.png)
+
+`location` 处填入打卡地址，请遵循省->市->区(市)->街道->路的五级划分填入
+
+`blue_sign` 处填写是否进行蓝牙打卡，填写yes/no
+
+`dorm_sign`  处填写是否进行归寝打卡，填写yes/no
 
 
-location处填入打卡地址，请遵循省->市->区(市)->街道->路的五级划分填入
 
-longitude填入打卡经度
+#### 多用户打卡
 
-latitude填入打卡纬度
-
-
-## 多用户打卡
 多用户打卡在末尾新起一行，加上三个横线后(---)，在下一行复制粘贴上一用户配置格式，修改对应信息即可。
 
 
-坐标以及地点获取可用腾讯地图的坐标拾取器：https://lbs.qq.com/tool/getpoint/ ，但腾讯地图获取到的地址并不含有街道，请手动在路段前添加上街道。
 
+#### 登陆问题：
 
-
-在获取街道时，可按F12打开开发者工具，点击网络后刷新，输入你所需地址后找到?key=XXXXX 的数据包，依次点开result，address_reference，town中的值便是街道名称。
-
-
-
-登陆问题：
-> 我在校园密码修改后，请点击清除缓存，等待页面跳转到未登录界面时，便可把修改后密码填入程序配置文件中，密码建议为字母加数字，否则程序登陆失败。在运行完程序并且程序将jws存入本地后，即可正常登录我在校园。
+我在校园密码修改后，请点击清除缓存，等待页面跳转到未登录界面时，便可把修改后密码填入程序配置文件中，密码建议为字母加数字，否则程序登陆失败。在运行完程序并且程序将jws存入本地后，即可正常登录我在校园。
 
 
 
 配置文件如下图：
 
-![image-20240517232915141](https://gitee.com/lateyoung222/images/raw/master/image-20240517232915141.png)
+![image-20240820094127279](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820094127279.png)
 
 
 ## 代码使用
 
 1. 服务器端配置：
 
-- 将服务器端的cache文件夹中的config.yaml文件填写好后，使用scp命令或者下载filezilla后将WoZaiXiaoYuan.py，GoOut.py以及cache文件夹上传到服务器中。
+​	从本仓库下载所有代码
 
-- filezilla下载地址：https://pc.qq.com/detail/6/detail_22246.html
+​	`git clone https://github.com/LinChiQ/NewWoZaiXiaoYuan`
+
+​	填写好cahche文件夹下的config.yaml文件以及相关配置，运行`python WoZaiXiaoYuan.py`
 
 - 配置定时运行可在宝塔面板中直接使用计划任务配置为SHELL脚本命令: python/python3(Ubuntu系统) WoZaiXiaoYuan.py所在路径/WoZaiXiaoYuan.py
-
-- python/python3(Ubuntu系统) GoOut.py所在路径/GoOut.py，几点运行便会几点自动提交外出报备
-
 - 或者使用Linux自带的crontab命令运行：https://www.runoob.com/linux/linux-comm-crontab.html
 
 2. Github Action的使用
@@ -143,11 +162,12 @@ latitude填入打卡纬度
   - `mail_password` 填写**发送邮件通知**的邮件号的授权码
   - `mail_host` 填写**发送邮件通知**的邮件号所对应的SMTP服务器地址
   - `punch_location` 填写想要打卡地址，对应上方服务器端的location打卡地址
-  - `punch_longitude` 填写对应打卡经度
-  - `punch_latitude` 填写对应打卡维度
+  - `dorm_sign` 是否进行归寝打卡，填写yes/no
+  - `blue_sign` 是否进行蓝牙打卡，填写yes/no
   - `wzxy_username` 填写我在校园登录账号，通常为手机号
   - `wzxy_password` 填写我在校园登录密码
   - `sct_ftqq` 填写[Server酱](https://sct.ftqq.com)的<font color="red">SendKey</font>值，若为空则代表不使用
+  - `tencentKey` 填写上方获取并已分配额度的腾讯地图KEY值
 
   ![填写参考](https://gitee.com/lateyoung222/images/raw/master/image-20240502202556250.png)
 
