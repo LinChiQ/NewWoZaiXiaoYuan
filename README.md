@@ -192,3 +192,11 @@ Python3.7版本及以上
 
 
 
+​	**Archive Fork后的仓库**
+
+​	Github Action如果在仓库长期不更新代码的情况下，会在一个月内自动停止对Action的调用，所以在Fork仓	库后还需要对仓库Archive，点击`Settings`，往下找到`Danger Zone`，点击**Archive this repository**
+
+![image-20240820095313803](https://gitee.com/lateyoung222/images/raw/master/imgs/image-20240820095313803.png)
+
+
+
