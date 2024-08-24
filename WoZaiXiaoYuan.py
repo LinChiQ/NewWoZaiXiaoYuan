@@ -124,7 +124,7 @@ def GetUserJws(username):
     jws = cursor.fetchone()
     cursor.close()
     conn.close()
-    return jws
+    return jws[0]
 
 
 def updateJWS(username, newJWS):
@@ -186,7 +186,7 @@ def GetPunchData(headers, username, batch, location, tencentKey):
     cursor = conn.cursor()
     cursor.execute("SELECT punchData FROM users WHERE username = ?", (username,))
     # 尝试从数据库获取现存位置信息
-    punchData = cursor.fetchone()
+    punchData = cursor.fetchone()[0]
     if punchData:
         return json.loads(punchData)
     PunchData = {}
@@ -201,7 +201,6 @@ def GetPunchData(headers, username, batch, location, tencentKey):
         reverseGeocode_data = json.loads(reverseGeocode.text)
         if reverseGeocode_data['status'] == 0:
             PunchData.update({"location": reverseGeocode_data['result']['ad_info']['name'].replace(",", "/") + '/' + reverseGeocode_data['result']['address_reference']['town']['title'] + '/' + reverseGeocode_data['result']['address_reference']['landmark_l1']['title'] + '/156' +  reverseGeocode_data['result']['ad_info']['adcode'] + '/' + reverseGeocode_data['result']['ad_info']['city_code'] + '/' + reverseGeocode_data['result']['address_reference']['town']['id'] + '/' + str(geocode_data['result']['location']['lng']) + '/' + str(geocode_data['result']['location']['lat'])})
-            
             return PunchData
 
 
