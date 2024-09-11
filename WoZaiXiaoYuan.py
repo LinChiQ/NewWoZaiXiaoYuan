@@ -203,7 +203,8 @@ def GetPunchData(username, location, tencentKey, dataJson):
         reverseGeocode_data = json.loads(reverseGeocode.text)
         if reverseGeocode_data['status'] == 0:
             # 将 polygon 从字符串转换为列表
-            dataJson['polygon'] = json.loads(dataJson['polygon'])
+            if len(dataJson['polygon']) != 0:
+                dataJson['polygon'] = json.loads(dataJson['polygon'])
             location_data = reverseGeocode_data['result']
             PunchData = {
                 "latitude": location_data['location']['lat'],
@@ -218,10 +219,11 @@ def GetPunchData(username, location, tencentKey, dataJson):
                 "towncode": location_data['address_reference']['town']['id'],
                 "township": location_data['address_reference']['town']['title'],
                 "streetcode": "",
-                "street": location_data['address_component']['street'],
-                "inArea": 1,
-                "areaJSON": json.dumps(dataJson, ensure_ascii=False)
+                "street": location_data['address_component']['street']
             }
+            if len(dataJson['polygon']) != 0:
+                PunchData["inArea"] = 1
+                PunchData["areaJSON"] = json.dumps(dataJson, ensure_ascii=False)
             return PunchData
 
 
@@ -239,7 +241,7 @@ def GetMySignLogs(headers):
     signId, userArea, id, areaData = data['signId'], data['userArea'], data['id'], data['areaList']
     for _ in areaData:
         if userArea == _['name']:
-            dataStr = _['dataStr'] if ('dataStr' in _) else ('[{"longitude": %s, "latitude": %s}]' % (_['longitude'], _['latitude']))
+            dataStr = _['dataStr'] if ('dataStr' in _) else ''
             dataJson = {
                 "type": 1,
                 "polygon": dataStr,
