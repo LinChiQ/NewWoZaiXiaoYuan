@@ -32,21 +32,20 @@ def encrypt(t, e):
     return b64encode(encrypted_text).decode('utf-8')
 
 
-def Login(headers, username, password):
+# 获取学校ID
+def get_school_id(school_name):
     headers00 = {
-        "accept": "application/json, text/plain, */*",
-        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1 Edg/119.0.0.0"}
+    "accept": "application/json, text/plain, */*",
+    "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1 Edg/119.0.0.0"}
     url00 = "https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/getSchoolList"
     response00 = requests.get(url00, headers=headers00)
-    school_data = json.loads(response00.text)['data']
+    data = json.loads(response00.text)['data']
+    for school in data:
+        if school['name'] == school_name:
+            return school['id']
+    return None
 
-    def find_school_id(school_name, data):
-        for school in data:
-            if school['name'] == school_name:
-                return school['id']
-        return None
-    school = os.environ["school_name"]
-    school_id = find_school_id(school, school_data)
+def Login(headers, username, password):
     key = (str(username) + "0000000000000000")[:16]
     encrypted_text = encrypt(password, key)
     login_url = 'https://gw.wozaixiaoyuan.com/basicinfo/mobile/login/username'
@@ -56,7 +55,6 @@ def Login(headers, username, password):
         "password": encrypted_text
     }
     login_req = requests.post(login_url, params=params, headers=headers)
-    print(login_req.text)
     text = json.loads(login_req.text)
     if text['code'] == 0:
         print(f"{username}账号登陆成功！")
@@ -68,45 +66,78 @@ def Login(headers, username, password):
         return False
 
 
-def GetUnDo(headers, username):
-    url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch'
-    res = requests.get(url, headers=headers)
-    lists = json.loads(res.text)['data']
-    for list in lists['list']:
-        if list['state'] == 1 and list['type'] == 0:
-            return list['id']
-    print(f"{username}未找到未打卡项目！")
-    MsgSend(f"{username}未找到未打卡项目！", f"{username}未找到未打卡项目！")
+# 获取我的日志
+def GetMySignLogs(headers):
+    url = 'https://gw.wozaixiaoyuan.com/sign/mobile/receive/getMySignLogs'
+    params = {
+        'page': 1,
+        'size': 10
+    }
+    data = requests.get(url, headers= headers, params=params).json()['data'][0]
+    if int(data['signStatus']) != 1:
+        print("用户已打过卡！")
+        return False
+    signId, userArea, id, areaData = data['signId'], data['userArea'], data['id'], data['areaList']
+    for _ in areaData:
+        if userArea == _['name']:
+            dataStr = _['dataStr'] if ('dataStr' in _) else ('[{"longitude": %s, "latitude": %s}]' % (_['longitude'], _['latitude']))
+            dataJson = {
+                "type": 1,
+                "polygon": dataStr,
+                "id": _['id'],
+                "name": _['name'],
+            }
+            return signId, id, dataJson
     return False
 
 
-def GetPunchData(headers, username, batch, location, tencentKey):
-    PunchData = {}
-    locationType_url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/getForm?batch='+ batch
-    res = requests.get(locationType_url, headers=headers)
-    locationType = json.loads(res.text)['data']['locationType']
-    PunchData.update({"type": 0, "locationMode": 0, "locationType": locationType})
+def GetPunchData(username, location, tencentKey, dataJson):
     geocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"address": location, "key": tencentKey})
     geocode_data = json.loads(geocode.text)
     if geocode_data['status'] == 0:
         reverseGeocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"location": f"{geocode_data['result']['location']['lat']},{geocode_data['result']['location']['lng']}", "key": tencentKey})
         reverseGeocode_data = json.loads(reverseGeocode.text)
         if reverseGeocode_data['status'] == 0:
-            PunchData.update({"location": reverseGeocode_data['result']['ad_info']['name'].replace(",", "/") + '/' + reverseGeocode_data['result']['address_reference']['town']['title'] + '/' + reverseGeocode_data['result']['address_reference']['landmark_l1']['title'] + '/156' +  reverseGeocode_data['result']['ad_info']['adcode'] + '/' + reverseGeocode_data['result']['ad_info']['city_code'] + '/' + reverseGeocode_data['result']['address_reference']['town']['id'] + '/' + str(geocode_data['result']['location']['lng']) + '/' + str(geocode_data['result']['location']['lat'])})
+            # 将 polygon 从字符串转换为列表
+            dataJson['polygon'] = json.loads(dataJson['polygon'])
+            location_data = reverseGeocode_data['result']
+            PunchData = {
+                "latitude": location_data['location']['lat'],
+                "longitude": location_data['location']['lng'],
+                "nationcode": "",
+                "country": "中国",
+                "province": location_data['ad_info']['province'],
+                "citycode": "",
+                "city": location_data['ad_info']['city'],
+                "adcode": location_data['ad_info']['adcode'],
+                "district": location_data['ad_info']['district'],
+                "towncode": location_data['address_reference']['town']['id'],
+                "township": location_data['address_reference']['town']['title'],
+                "streetcode": "",
+                "street": location_data['address_component']['street'],
+                "inArea": 1,
+                "areaJSON": json.dumps(dataJson, ensure_ascii=False)
+            }
             return PunchData
 
 
-def Punch(headers, batch, punchData, username):
-    url = 'https://gw.wozaixiaoyuan.com/health/mobile/health/save?batch='+batch
-    res = requests.post(url, json=punchData, headers=headers)
+def Punch(headers, punchData, username, id, signId):
+    headers['Referer'] = 'https://servicewechat.com/wxce6d08f781975d91/200/page-frame.html'
+    url = 'https://gw.wozaixiaoyuan.com/sign/mobile/receive/doSignByArea'
+    params = {
+        'id': id,
+        'schoolId': school_id,
+        'signId': signId
+    }
+    res = requests.post(url, data=json.dumps(punchData), headers=headers, params=params)
     txt = json.loads(res.text)
     if txt['code'] == 0:
         print(f"{username}打卡成功！\n")
-        MsgSend(f"{username} 打卡成功！", f"{username} 归寝打卡成功！")
+        MsgSend("打卡成功！", f"{username}归寝打卡成功！")
         return True
     else:
         print(f"{username}打卡失败！{str(txt)}\n")
-        MsgSend(f"{username} 打卡失败！", f"{username} 归寝打卡失败！" + str(res.text))
+        MsgSend("打卡失败！", f"{username}归寝打卡失败！{str(res.text)}")
         return False
 
 
@@ -157,7 +188,9 @@ def doBluePunch(headers, username):
 
 
 def main():
+    global school_id
     username = os.environ['wzxy_username']
+    school_id = get_school_id(os.environ['school_name'])
     login_headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; WLZ-AN00 Build/HUAWEIWLZ-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4343 MMWEBSDK/20220903 Mobile Safari/537.36 MMWEBID/4162 MicroMessenger/8.0.28.2240(0x28001C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxce6d08f781975d91'}
     jws = Login(login_headers, username,
                              os.environ['wzxy_password'])
@@ -181,11 +214,11 @@ def main():
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
         }
         if os.environ['dorm_sign'] == 'yes':
-            batch = GetUnDo(headers, username)
-            if not batch:
+            signId, id, dataJson = GetMySignLogs(headers)
+            if not signId:
                 return False
-            punchData = GetPunchData(headers, username, batch, os.environ['location'], os.environ['tencentKey'])
-            Punch(headers, batch, punchData, username)
+            punchData = GetPunchData(username, os.environ['location'], os.environ['tencentKey'], dataJson)
+            Punch(headers, punchData, username, id, signId)
             return True
         if os.environ['blue_sign'] == 'yes':
             doBluePunch(headers, username)
