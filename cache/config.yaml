@@ -1,25 +1,26 @@
-mail_address: aaa@163.com # 邮箱地址
-password: aaa # 邮箱授权码
+mail_address:  # 邮箱地址，如不使用填空
+password:  # 邮箱授权码，如不使用填空
 host: smtp@163.com # 邮箱SMTP地址
-sct_ftqq: 
-school: 景德镇大学 # 填写对应学校名称
+school: 昆明理工大学 # 填写对应学校名称
+tencent_map: NN2BZ-HGNCG-PLSQD-*****-*****-***** # 填写腾讯地图API KEY
 
 ---
 
-username: 123456 # 我在校园用户名
-password: aaa # 我在校园密码
-receive: aaa@qq.com # 接受邮箱地址
-locations:
-  location: 贵州省贵阳市南明区遵义路街道遵义中路 # 打卡地址，省->区(市)->市->街道->路
-  longitude: 106.7040062 # 打卡经度
-  latitude: 26.5656204 # 打卡纬度
+username: 13212345111 # 我在校园用户名
+password: abcdefg # 我在校园密码
+receive: 123456@qq.com # 接受邮箱地址，如不使用填空
+sct_ftqq: # server酱地址，如不使用填空
+blue_sign: no # 是否进行蓝牙打卡，no/yes
+dorm_sign: yes # 是否进行归寝打卡
+location: 云南省昆明市呈贡区吴家营街道樱花大道 # 打卡地址，省->区(市)->市->街道->路
 
---- # 多用户之间使用三短横线隔开
+--- # 多用户使用横线隔开
 
-username: 123456 # 我在校园用户名
-password: aaa # 我在校园密码
-receive: aaa@qq.com # 接受邮箱地址
-locations:
-  location: 贵州省贵阳市南明区遵义路街道遵义中路 # 打卡地址，省->区(市)->市->街道->路
-  longitude: 106.7040062 # 打卡经度
-  latitude: 26.5656204 # 打卡纬度
+username: 13212345222 # 我在校园用户名
+password: abcdefg # 我在校园密码
+receive: 123456@qq.com # 接受邮箱地址，如不使用填空
+sct_ftqq: # server酱地址，如不使用填空，但邮箱和server酱不能都为空
+blue_sign: no # 是否进行蓝牙打卡，no/yes
+dorm_sign: yes # 是否进行归寝打卡
+location: 云南省昆明市呈贡区吴家营街道樱花大道 # 打卡地址，省->区(市)->市->街道->路
+
