@@ -161,7 +161,8 @@ Python3.7版本及以上
   - `mail_address` 填写**发送邮件通知**的邮件号，若为空则代表不使用
   - `mail_password` 填写**发送邮件通知**的邮件号的授权码
   - `mail_host` 填写**发送邮件通知**的邮件号所对应的SMTP服务器地址
-  - `punch_location` 填写想要打卡地址，对应上方服务器端的location打卡地址
+  - ~~`punch_location` 填写想要打卡地址，对应上方服务器端的location打卡地址~~
+  -  `location` 昆工怡园的学生填写云南省昆明市呈贡区吴家营街道樱花大道
   - `dorm_sign` 是否进行归寝打卡，填写yes/no
   - `blue_sign` 是否进行蓝牙打卡，填写yes/no
   - `wzxy_username` 填写我在校园登录账号，通常为手机号
