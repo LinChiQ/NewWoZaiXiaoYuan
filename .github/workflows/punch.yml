@@ -27,6 +27,7 @@ jobs:
         mail_password: ${{secrets.mail_password}}
         mail_host: ${{secrets.mail_host}}
         punch_location: ${{secrets.punch_location}}
+        location: ${{secrets.location}}
         wzxy_username: ${{secrets.wzxy_username}}
         wzxy_password: ${{secrets.wzxy_password}}
         sct_ftqq: ${{secrets.sct_ftqq}}
