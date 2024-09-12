@@ -76,7 +76,7 @@ def GetMySignLogs(headers):
     data = requests.get(url, headers= headers, params=params).json()['data'][0]
     if int(data['signStatus']) != 1:
         print("用户已打过卡！")
-        return False
+        return False, False, False
     signId, userArea, id, areaData = data['signId'], data['userArea'], data['id'], data['areaList']
     for _ in areaData:
         if userArea == _['name']:
@@ -88,7 +88,7 @@ def GetMySignLogs(headers):
                 "name": _['name'],
             }
             return signId, id, dataJson
-    return False
+    return False, False, False
 
 
 def GetPunchData(username, location, tencentKey, dataJson):
