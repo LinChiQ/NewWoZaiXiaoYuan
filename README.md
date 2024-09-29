@@ -172,7 +172,9 @@ Python3.7版本及以上
 
   ![填写参考](https://gitee.com/lateyoung222/images/raw/master/image-20240502202556250.png)
 
-  
+  **修改打卡时间/配置多用户**
+  - 点击.github -> workflows -> punch.yml，将cron前面的注释删除，并且修改打卡时间，注意时间的转换，如果需要多用户打卡，将属于User02的部分取消注释后，在Environment中新增一个名为`CONFIG_02`的环境后，填入同样的Secert即可
+  - 如需要第三及以上个用户，请复制User01的所有代码，复制到yml文件后方，修改为User03，然后将`environment: CONFIG_02`修改为`environment: CONFIG_03`，再在Environment中新增一个叫`CONFIG_03`的环境后填写同样的Secert即可，更多用户相同步骤，请注意新增时的**yml文件缩进**
 
   **打卡测试**
 
@@ -186,10 +188,6 @@ Python3.7版本及以上
 
   
 
-​	**多用户打卡**
-
-- 回到仓库首页，依次点击`.github/workflows/punch.yml`，将属于User02的部分取消注释后，在Environment中新增一个名为`CONFIG_02`的环境后，填入同样的Secert即可
-- 如需要第三及以上个用户，请复制User01的所有代码，复制到yml文件后方，修改为User03，然后将`environment: CONFIG_02`修改为`environment: CONFIG_03`，再在Environment中新增一个叫`CONFIG_03`的环境后填写同样的Secert即可，更多用户相同步骤，请注意新增时的**yml文件缩进**
 
 
 
