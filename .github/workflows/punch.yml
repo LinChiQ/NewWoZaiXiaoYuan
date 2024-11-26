@@ -3,7 +3,7 @@
   on:
     workflow_dispatch:
     schedule:
-      # - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
+      - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
 
   jobs:
     User01:
