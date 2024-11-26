@@ -1,63 +1,63 @@
-name: 我在校园打卡
+  name: 我在校园打卡
 
-on:
-  workflow_dispatch:
-  schedule:
-    # - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
+  on:
+    workflow_dispatch:
+    schedule:
+      # - cron:  '00 14 * * *' # 默认在每天 UTC 14:00 （北京时间 22:00）执行
 
-jobs:
-  User01:
-    runs-on: ubuntu-latest
-    environment: CONFIG_01
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    - name: 安装依赖
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: 执行打卡
-      env:
-        school_name: ${{secrets.school_name}}
-        receive_mail: ${{secrets.receive_mail}}
-        mail_address: ${{secrets.mail_address}}
-        mail_password: ${{secrets.mail_password}}
-        mail_host: ${{secrets.mail_host}}
-        punch_location: ${{secrets.punch_location}}
-        wzxy_username: ${{secrets.wzxy_username}}
-        wzxy_password: ${{secrets.wzxy_password}}
-        sct_ftqq: ${{secrets.sct_ftqq}}
-        dorm_sign: ${{secrets.dorm_sign}}
-        blue_sign: ${{secrets.blue_sign}}
-        tencentKey: ${{secrets.tencentKey}}
-      run: python actionVersion.py
+  jobs:
+    User01:
+      runs-on: ubuntu-latest
+      environment: CONFIG_01
+      steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: 执行打卡
+        env:
+          school_name: ${{secrets.school_name}}
+          receive_mail: ${{secrets.receive_mail}}
+          mail_address: ${{secrets.mail_address}}
+          mail_password: ${{secrets.mail_password}}
+          mail_host: ${{secrets.mail_host}}
+          punch_location: ${{secrets.punch_location}}
+          wzxy_username: ${{secrets.wzxy_username}}
+          wzxy_password: ${{secrets.wzxy_password}}
+          sct_ftqq: ${{secrets.sct_ftqq}}
+          dorm_sign: ${{secrets.dorm_sign}}
+          blue_sign: ${{secrets.blue_sign}}
+          tencentKey: ${{secrets.tencentKey}}
+        run: python actionVersion.py
 
-  # User02:
-  #   runs-on: ubuntu-latest
-  #   environment: CONFIG_02
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Set up Python 3.9
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: 3.9
-  #   - name: 安装依赖
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #   - name: 执行打卡
-  #     env:
-  #       school_name: ${{secrets.school_name}}
-  #       receive_mail: ${{secrets.receive_mail}}
-  #       mail_address: ${{secrets.mail_address}}
-  #       mail_password: ${{secrets.mail_password}}
-  #       mail_host: ${{secrets.mail_host}}
-  #       punch_location: ${{secrets.punch_location}}
-  #       wzxy_username: ${{secrets.wzxy_username}}
-  #       wzxy_password: ${{secrets.wzxy_password}}
-  #       punch_longitude: ${{secrets.punch_longitude}}
-  #       punch_latitude: ${{secrets.punch_latitude}}
-  #     run: python actionVersion.py
+    # User02:
+    #   runs-on: ubuntu-latest
+    #   environment: CONFIG_02
+    #   steps:
+    #   - uses: actions/checkout@v4
+    #   - name: Set up Python 3.9
+    #     uses: actions/setup-python@v4
+    #     with:
+    #       python-version: 3.9
+    #   - name: 安装依赖
+    #     run: |
+    #       python -m pip install --upgrade pip
+    #       pip install -r requirements.txt
+    #   - name: 执行打卡
+    #     env:
+    #       school_name: ${{secrets.school_name}}
+    #       receive_mail: ${{secrets.receive_mail}}
+    #       mail_address: ${{secrets.mail_address}}
+    #       mail_password: ${{secrets.mail_password}}
+    #       mail_host: ${{secrets.mail_host}}
+    #       punch_location: ${{secrets.punch_location}}
+    #       wzxy_username: ${{secrets.wzxy_username}}
+    #       wzxy_password: ${{secrets.wzxy_password}}
+    #       punch_longitude: ${{secrets.punch_longitude}}
+    #       punch_latitude: ${{secrets.punch_latitude}}
+    #     run: python actionVersion.py
