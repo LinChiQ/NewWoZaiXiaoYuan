@@ -103,13 +103,18 @@ def Login(headers, username, password):
 
 def testLoginStatus(headers, jws):
     # 用任意需要鉴权的接口即可，这里随便选了一个
-    url = "https://gw.wozaixiaoyuan.com/health/mobile/health/getBatch"
+    url = 'https://gw.wozaixiaoyuan.com/sign/mobile/receive/getMySignLogs'
+    params = {
+        'page': 1,
+        'size': 10
+    }
     headers['Host'] = "gw.wozaixiaoyuan.com"
     headers['cookie'] = f'JWSESSION={jws}'
     headers['cookie'] = f'JWSESSION={jws}'
     headers['cookie'] = f'WZXYSESSION={jws}'
-    res = requests.get(url, headers=headers)
+    res = requests.get(url, headers=headers, params=params)
     text = json.loads(res.text)
+    print(text)
     if text['code'] == 0:
         return True
     elif text['code'] == 103:
@@ -187,7 +192,7 @@ def InsertOrUpdateUserData(username, jws, punchData):
 
 
 
-def GetPunchData(username, location, tencentKey, dataJson):
+def GetPunchData(username, location, tencentKey):
     # 从sqlite中拿到用户对应jws
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -202,9 +207,6 @@ def GetPunchData(username, location, tencentKey, dataJson):
         reverseGeocode = requests.get("https://apis.map.qq.com/ws/geocoder/v1", params={"location": f"{geocode_data['result']['location']['lat']},{geocode_data['result']['location']['lng']}", "key": tencentKey})
         reverseGeocode_data = json.loads(reverseGeocode.text)
         if reverseGeocode_data['status'] == 0:
-            # 将 polygon 从字符串转换为列表
-            if len(dataJson['polygon']) != 0:
-                dataJson['polygon'] = json.loads(dataJson['polygon'])
             location_data = reverseGeocode_data['result']
             PunchData = {
                 "latitude": location_data['location']['lat'],
@@ -221,9 +223,6 @@ def GetPunchData(username, location, tencentKey, dataJson):
                 "streetcode": "",
                 "street": location_data['address_component']['street']
             }
-            if len(dataJson['polygon']) != 0:
-                PunchData["inArea"] = 1
-                PunchData["areaJSON"] = json.dumps(dataJson, ensure_ascii=False)
             return PunchData
 
 
@@ -237,24 +236,14 @@ def GetMySignLogs(headers):
     data = requests.get(url, headers= headers, params=params).json()['data'][0]
     if int(data['signStatus']) != 1:
         print("用户已打过卡！")
-        return False, False, False
-    signId, userArea, id, areaData = data['signId'], data['userArea'], data['id'], data['areaList']
-    for _ in areaData:
-        if userArea == _['name']:
-            dataStr = _['dataStr'] if ('dataStr' in _) else ''
-            dataJson = {
-                "type": 1,
-                "polygon": dataStr,
-                "id": _['id'],
-                "name": _['name'],
-            }
-            return signId, id, dataJson
-    return False, False, False
+        return False, False
+    signId, id = data['signId'], data['id']
+    return signId, id
 
 
 def Punch(headers, punchData, username, id, signId, receive=False, sct_ftqq=False):
-    headers['Referer'] = 'https://servicewechat.com/wxce6d08f781975d91/200/page-frame.html'
-    url = 'https://gw.wozaixiaoyuan.com/sign/mobile/receive/doSignByArea'
+    headers['Referer'] = 'https://servicewechat.com/wxce6d08f781975d91/203/page-frame.html'
+    url = 'https://gw.wozaixiaoyuan.com/sign/mobile/receive/doSignByLocation'
     params = {
         'id': id,
         'schoolId': school_id,
@@ -367,10 +356,10 @@ def main():
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
         }
         if config['dorm_sign']:
-            signId, id, dataJson = GetMySignLogs(headers)
+            signId, id = GetMySignLogs(headers)
             if not signId:
                 continue
-            punchData = GetPunchData(username, config['location'], tencentKey, dataJson)
+            punchData = GetPunchData(username, config['location'], tencentKey)
             Punch(headers, punchData, username, id, signId, config['receive'], config['sct_ftqq'])
             InsertOrUpdateUserData(username, jws, punchData)
         if config['blue_sign']:
